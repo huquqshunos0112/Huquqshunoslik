@@ -1,0 +1,1069 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Huquqshunoslik platformasi</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+:root{--bg:#f3f6fb;--card:#fff;--ink:#14213d;--mut:#5b6b8a;--navy:#14213d;--gold:#c9962b;--teal:#0f766e;--red:#b42318;--line:#dbe3f0;--ok:#157f3b}
+@media (prefers-color-scheme:dark){:root{--bg:#0e1626;--card:#16213a;--ink:#eaf0fb;--mut:#9fb0cf;--line:#26355a;--navy:#0a1020}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Times New Roman",Times,serif;font-size:16px;line-height:1.5;padding-bottom:env(safe-area-inset-bottom,0)}
+h1,h2,h3{margin:0 0 .4em;line-height:1.2}
+button,input,select{font:inherit}
+.top{background:var(--navy);color:#fff;padding:calc(10px + env(safe-area-inset-top,0)) 16px 10px;border-bottom:3px solid var(--gold);font-size:13px}
+.top b{color:var(--gold);display:block;font-size:14px}
+.hero{background:linear-gradient(135deg,#14213d,#1d3a6b 60%,#0f766e);color:#fff;padding:28px 18px 34px;text-align:center;position:relative;overflow:hidden}
+.hero:before{content:"⚖";position:absolute;font-size:200px;opacity:.07;right:-30px;top:-30px}
+.hero h1{font-size:30px;letter-spacing:.5px}
+.hero p{margin:0 auto;max-width:420px;opacity:.9}
+.poem{margin:16px auto 0;max-width:340px;padding:12px 16px;border-left:3px solid var(--gold);background:rgba(255,255,255,.08);text-align:left;font-style:italic;min-height:96px}
+.wrap{max-width:900px;margin:0 auto;padding:16px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px;margin-bottom:14px}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin:14px 0 0;justify-content:center}
+.chip{background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.25);border-radius:20px;padding:4px 12px;font-size:13px}
+label{display:block;font-size:14px;color:var(--mut);margin:10px 0 4px}
+input,select{width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink)}
+.btn{background:var(--navy);color:#fff;border:0;border-radius:8px;padding:10px 16px;cursor:pointer;margin:8px 8px 0 0}
+.btn.gold{background:var(--gold);color:#1a1200}.btn.red{background:var(--red)}.btn.ghost{background:transparent;color:var(--ink);border:1px solid var(--line)}
+.btn:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid var(--gold)}
+.tabs{display:flex;gap:6px;overflow-x:auto;padding:10px 16px;background:var(--card);border-bottom:1px solid var(--line)}
+.tabs button{white-space:nowrap;border:1px solid var(--line);background:transparent;color:var(--ink);border-radius:20px;padding:7px 14px;cursor:pointer}
+.tabs button.on{background:var(--navy);color:#fff;border-color:var(--navy)}
+.tw{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:14px}
+th,td{padding:8px;border-bottom:1px solid var(--line);text-align:left}
+th{color:var(--mut);font-weight:600}
+.bar{height:14px;background:var(--line);border-radius:7px;overflow:hidden}
+.bar i{display:block;height:100%;background:var(--teal)}
+.q{margin-bottom:16px}.q label.o{display:flex;gap:8px;align-items:flex-start;color:var(--ink);margin:6px 0;cursor:pointer}
+.q label.o input{width:auto;margin-top:5px}
+.mut{color:var(--mut);font-size:14px}.ok{color:var(--ok)}.bad{color:var(--red)}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center;justify-content:space-between}
+.msg{padding:8px 12px;border-radius:8px;background:rgba(201,150,43,.18);margin-top:10px;font-size:14px}
+
+.hh{position:relative;background:#0a1b45;color:#fff;overflow:hidden;text-align:center;padding:32px 18px 96px}
+.hh:before{content:"";position:absolute;inset:0;opacity:.17;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='84' height='84'%3E%3Cg fill='none' stroke='%23e2b24a' stroke-width='1.2'%3E%3Crect x='24' y='24' width='36' height='36'/%3E%3Crect x='24' y='24' width='36' height='36' transform='rotate(45 42 42)'/%3E%3Ccircle cx='42' cy='42' r='6'/%3E%3C/g%3E%3C/svg%3E")}
+.hh:after{content:"";position:absolute;left:0;right:0;bottom:0;height:90px;background:radial-gradient(ellipse at 50% 100%,rgba(31,182,176,.5),transparent 70%)}
+.hh>*{position:relative;z-index:1;animation:rise .8s ease both}
+.hh>*:nth-child(2){animation-delay:.1s}.hh>*:nth-child(3){animation-delay:.2s}.hh>*:nth-child(4){animation-delay:.3s}.hh>*:nth-child(5){animation-delay:.4s}
+@keyframes rise{from{opacity:0;transform:translateY(14px)}}
+@media (prefers-reduced-motion:reduce){.hh>*{animation:none}}
+.emb{filter:drop-shadow(0 0 14px rgba(226,178,74,.45))}
+.ht{font-size:clamp(34px,9vw,56px);letter-spacing:1px;margin:8px 0 6px;color:#fff}
+.orn{width:120px;height:3px;margin:0 auto 12px;background:linear-gradient(90deg,transparent,#e2b24a,transparent)}
+.sub{max-width:440px;margin:0 auto;font-size:17px;opacity:.92}
+.bayt{margin:20px auto 0;max-width:360px;padding:14px 18px;border:1px solid #e2b24a;outline:1px solid rgba(226,178,74,.35);outline-offset:4px;background:rgba(255,255,255,.07);font-style:italic;text-align:left;min-height:104px}
+.lg{max-width:440px;margin:-64px auto 28px;position:relative;z-index:2;padding:20px;border-radius:16px;box-shadow:0 18px 40px rgba(10,27,69,.28);border-top:4px solid #e2b24a}
+.seg{display:flex;background:var(--bg);border-radius:10px;padding:4px;gap:4px;margin:6px 0}
+.seg button{flex:1;border:0;background:transparent;color:var(--ink);padding:9px;border-radius:8px;cursor:pointer}
+.seg button.on{background:var(--navy);color:#fff}
+.sec{margin:26px 0 12px;font-size:22px}
+.steps{list-style:none;margin:0;padding:0;counter-reset:s}
+.steps li{counter-increment:s;position:relative;padding:0 0 18px 48px;border-left:2px solid var(--gold);margin-left:16px}
+.steps li:last-child{border-color:transparent}
+.steps li:before{content:counter(s);position:absolute;left:-17px;top:-2px;width:32px;height:32px;border-radius:50%;background:var(--navy);color:#e2b24a;border:2px solid var(--gold);display:grid;place-items:center;font-weight:bold}
+.steps b{display:block}
+.ft{display:grid;gap:14px;grid-template-columns:repeat(auto-fit,minmax(210px,1fr))}
+.ft div{border-left:4px solid #1fb6b0;padding:4px 0 4px 14px}
+.ft b{display:block;margin-bottom:2px}
+.foot{background:#0a1b45;color:#cdd8f0;text-align:center;padding:22px 16px calc(22px + env(safe-area-inset-bottom,0));margin-top:30px;border-top:3px solid #e2b24a;font-size:14px}
+.foot b{color:#e2b24a;display:block}
+.big{font-size:52px;font-weight:bold;line-height:1.1}
+
+.bar i.ok{background:var(--ok)}.bar i.mid{background:var(--gold)}.bar i.bad{background:var(--red)}
+.mid{color:#a16207}
+.pr{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:6px 0}
+.pr span{flex:1 1 200px}.pr select{flex:1 1 150px;width:auto}
+.card ul{margin:6px 0;padding-left:20px;font-size:14px}
+
+/* ===== Yangi dizayn va moslashuvchanlik ===== */
+.top{text-align:center;padding-bottom:8px}
+.top b{font-size:clamp(14px,3.6vw,20px);letter-spacing:1.5px;text-transform:uppercase}
+.top small{display:block;font-size:11px;opacity:.75;font-style:italic;margin-top:2px}
+.wrap{max-width:1100px}
+textarea{width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink);resize:vertical}
+.btn,.tabs button,.seg button{min-height:44px}
+.hh{padding:28px 18px 40px}
+.hg{display:grid;gap:22px;max-width:1100px;margin:0 auto;align-items:center}
+.ill{width:min(250px,62vw);margin:0 auto;filter:drop-shadow(0 0 22px rgba(226,178,74,.4))}
+.kick{color:#e2b24a;letter-spacing:3px;font-size:12px}
+.hh .card{text-align:left;color:var(--ink)}
+.lg2{margin:22px auto 0;max-width:440px;border-top:4px solid #e2b24a;box-shadow:0 18px 40px rgba(0,0,0,.3)}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:14px}
+.stats .card{margin:0}.big2{font-size:30px;font-weight:bold}
+.g2{display:grid;gap:14px;grid-template-columns:1fr}.g2 .card{margin:0}
+.pod{display:flex;gap:8px;align-items:flex-end;justify-content:center;margin:6px 0 16px}
+.pd{flex:1;max-width:170px;text-align:center}.pn{font-size:14px;margin-bottom:6px;word-break:break-word}
+.pd .st{background:linear-gradient(#e2b24a,#a97a1a);border-radius:10px 10px 0 0;color:#1a1200;display:flex;flex-direction:column;justify-content:center}
+.pd .st b{font-size:28px}
+tr.meR td{background:rgba(201,150,43,.22)}
+.bdg{background:var(--red);color:#fff;border-radius:10px;padding:0 7px;font-size:12px}
+.chat{display:grid;gap:14px;grid-template-columns:1fr;align-items:start}.chat .card{margin:0}
+.stb{display:block;width:100%;text-align:left;background:transparent;color:var(--ink);border:1px solid var(--line);border-radius:10px;padding:8px 12px;margin-bottom:8px;cursor:pointer;min-height:44px}
+.stb.on{border-color:var(--gold);background:rgba(201,150,43,.15)}
+.thr{max-height:50vh;min-height:180px;overflow-y:auto;background:var(--bg);border-radius:10px;padding:12px;margin-bottom:10px}
+.bb{max-width:85%;padding:8px 12px;border-radius:12px;margin-bottom:10px;word-break:break-word}
+.bb.me{margin-left:auto;background:var(--navy);color:#fff}.bb.ot{background:var(--card);border:1px solid var(--line)}
+.tm{font-size:11px;opacity:.7;margin-top:2px}.bb audio{max-width:100%;margin-top:4px}.ai{max-width:100%;border-radius:8px;margin-top:4px}
+.fa{color:inherit;text-decoration:underline;display:block;margin-top:4px}
+.fl{display:inline-flex;align-items:center;cursor:pointer;color:var(--ink);margin:8px 8px 0 0}
+@media(min-width:900px){
+ .hh{padding:40px 32px 56px}
+ .hg{grid-template-columns:1fr 1fr;gap:48px}
+ .ill{order:2;width:min(440px,100%)}
+ .hx{text-align:left}.hx .orn{margin-left:0}.hx .sub,.hx .bayt{margin-left:0}.hx .chips{justify-content:flex-start}
+ .wrap{padding:24px 32px}
+ .g2{grid-template-columns:1fr 1fr}
+ .chat{grid-template-columns:300px 1fr}
+ .thr{max-height:55vh}
+}
+
+/* ===== 2-versiya: ixcham dizayn ===== */
+h2{font-size:22px}h3{font-size:18px}
+.ht{font-size:clamp(30px,7vw,42px);letter-spacing:.5px;margin:0 0 6px}
+.sub{font-size:18px;margin:0 auto}
+.big{font-size:40px}.sec{font-size:20px;display:flex;gap:8px;align-items:center}
+.hh:before{opacity:.08}
+.hh{padding:24px 16px 36px}
+.ic{vertical-align:-4px;flex:none}
+.btn,.tabs button{display:inline-flex;gap:6px;align-items:center;justify-content:center}
+.seg button{display:inline-flex;gap:6px;align-items:center;justify-content:center}
+.tabs button{border-radius:10px}
+.lg2{margin-top:18px}
+.mk{display:flex;gap:8px;align-items:center;margin:16px 0 4px;color:var(--teal)}
+.mi{display:flex;gap:12px;align-items:flex-start;padding:12px 0;border-bottom:1px solid var(--line)}
+.mi audio{width:100%;margin-top:6px}
+.card h2,.card h3{display:flex;gap:8px;align-items:center}
+@media(min-width:900px){.hg{grid-template-columns:1fr 1fr;gap:56px}.ill{width:min(380px,100%)}.lg2{margin-left:0}}
+
+/* ===== 3-versiya: logotip va doiraviy diagrammalar ===== */
+.dg{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:12px}
+.dc{text-align:center;padding:12px 8px;border:1px solid var(--line);border-radius:12px}
+.dsv{width:96px;margin:0 auto 6px;color:var(--ink)}.dn{font-size:14px;font-weight:bold;word-break:break-word}
+.sumr{display:flex;gap:18px;align-items:center;flex-wrap:wrap;margin-top:12px}.big3{width:130px;margin:0}
+.rec li{margin:8px 0}
+.hg,.hh .hg{grid-template-columns:1fr}
+.ill{width:min(300px,72vw)}
+@media(min-width:900px){.hg{grid-template-columns:1fr;max-width:520px}.ill{order:0;width:min(340px,100%)}.hx{text-align:center}.lg2{margin:18px auto 0}.hx .sub{margin:0 auto}}
+.hbtn{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}.hbtn .btn{flex:1 1 160px}
+</style>
+</head>
+<body>
+<div class="top"><b>Amudaryo tumani</b><small>Loyiha muallifi: Jumamuratov</small></div>
+<div id="app"></div>
+
+<script>
+/* ===== Telegram Mini App ===== */
+const tg = window.Telegram && window.Telegram.WebApp;
+if (tg) { tg.ready(); tg.expand(); }
+
+/* ===== Ma'lumotlar qatlami =====
+   Hozir brauzer xotirasida (localStorage) saqlanadi.
+   Umumiy bazaga o'tish uchun faqat load() va save() ni almashtirish kifoya. */
+const KEY = 'huquq_platform_v1';
+const load = () => { try { return JSON.parse(localStorage.getItem(KEY)) || null } catch(e) { return null } };
+const save = () => { try { localStorage.setItem(KEY, JSON.stringify(db)); return true } catch(e) { return false } };
+let db = load() || { teacher: null, students: [], tests: [], results: [] };
+/* Standart parol yo'q. Eski (ochiq matnli) parol topilsa, o'chiriladi va o'qituvchi yangisini o'zi yaratadi. */
+if (!db.teacher || db.teacher.pass !== undefined || !db.teacher.hash) db.teacher = null;
+db.msgs = db.msgs || [];
+db.mats = db.mats || [];
+db.cfg = db.cfg || { tg: '', email: '' };
+db.tests.forEach((t, i) => {
+  if (t.sinf == null) { t.sinf = 8; t.mavzu = i + 1; }
+  t.qs.forEach((q, k) => { if (!q.tur) { q.tur = 'multiple'; q.id = q.id || t.id + '-' + k; q.izoh = q.e || ''; q.ball = 1; q.bb = ''; q.blum = ''; } });
+});
+save();
+
+/* ===== Parol xavfsizligi: parol ochiq saqlanmaydi (PBKDF2 + tasodifiy tuz) ===== */
+const hex = b => Array.from(new Uint8Array(b)).map(x => x.toString(16).padStart(2, '0')).join('');
+async function hashPw(pw, salt) {
+  if (!(window.crypto && crypto.subtle)) throw new Error('crypto');
+  const k = await crypto.subtle.importKey('raw', new TextEncoder().encode(pw), 'PBKDF2', false, ['deriveBits']);
+  return hex(await crypto.subtle.deriveBits({ name: 'PBKDF2', salt: new TextEncoder().encode(salt), iterations: 150000, hash: 'SHA-256' }, k, 256));
+}
+async function makeCred(id, pw) { const salt = hex(crypto.getRandomValues(new Uint8Array(16))); return { id, salt, hash: await hashPw(pw, salt) }; }
+async function checkTeacher(id, pw) {
+  const t = db.teacher;
+  if (!t) return false;
+  const h = await hashPw(pw, t.salt);
+  return id === t.id && h === t.hash;
+}
+/* Ketma-ket noto'g'ri urinishlardan keyin vaqtincha bloklash */
+const LK = 'huquq_lock';
+const lockGet = () => { try { return JSON.parse(localStorage.getItem(LK)) || {}; } catch (e) { return {}; } };
+const lockLeft = () => Math.max(0, (lockGet().until || 0) - Date.now());
+const lockFail = () => { try { const o = lockGet(); o.n = (o.n || 0) + 1; if (o.n >= 5) o.until = Date.now() + 60000 * Math.min(10, o.n - 4); localStorage.setItem(LK, JSON.stringify(o)); } catch (e) {} };
+const lockClear = () => { try { localStorage.removeItem(LK); } catch (e) {} };
+
+const S = { user: null, tab: '', pending: null, take: null, note: '', aTest: '' };
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+const fmt = d => new Date(d).toLocaleString('uz-UZ');
+const sname = s => [s.name, s.surname].filter(Boolean).join(' ');
+const stName = id => { const s = db.students.find(x => x.id === id); return s ? sname(s) : id; };
+const fdt = ts => { const d = new Date(ts), p = n => String(n).padStart(2, '0'); return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}`; };
+const label = t => `${t.sinf}-sinf, ${t.mavzu}-mavzu: ${t.title}`;
+const tName = id => { const t = db.tests.find(x => x.id === id); return t ? label(t) : '—'; };
+const live = t => t.qs.filter(q => q.holat !== 'qoralama');
+const cmp = (a, b) => a.sinf - b.sinf || (a.bobNo || 0) - (b.bobNo || 0) || a.mavzu - b.mavzu;
+const ordered = () => db.tests.filter(t => live(t).length).sort(cmp);
+const pct = r => r.score >= r.total - 1e-9 ? 100 : Math.min(99, Math.round(r.score / r.total * 100));
+const best = (sid, tid) => Math.max(0, ...db.results.filter(r => r.sid === sid && r.tid === tid).map(pct));
+const unlockedIdx = sid => { const o = ordered(); let i = 0; while (i < o.length && best(sid, o[i].id) === 100) i++; return i; };
+
+
+
+/* ===== Asosiy render ===== */
+function render() {
+  const a = $('app');
+  if (!S.user) return a.innerHTML = home();
+  a.innerHTML = S.user.role === 'teacher' ? teacherView() : studentView();
+  const th = $('thr'); if (th) th.scrollTop = th.scrollHeight;
+}
+
+let ROLE = 'student';
+function setRole(r) { ROLE = r; $('rs').classList.toggle('on', r === 'student'); $('rt').classList.toggle('on', r === 'teacher'); }
+function setupView() {
+  return `
+  <section class="hh"><div class="hg"><div class="hx">
+    <h1 class="ht">Huquqshunoslik</h1>
+    <p class="sub">Birinchi ishga tushirish</p>
+    <div class="card lg2">
+      <h2>O'qituvchi akkauntini yarating</h2>
+      <p class="mut">Standart parol yo'q: ID va parolni o'zingiz belgilaysiz. Parolni hech kimga bermang.</p>
+      <label for="si1">ID</label><input id="si1" autocomplete="username">
+      <label for="sp1">Parol (kamida 8 belgi)</label><input id="sp1" type="password" autocomplete="new-password">
+      <label for="sp2">Parolni takrorlang</label><input id="sp2" type="password" autocomplete="new-password" onkeydown="if(event.key==='Enter')setupTeacher()">
+      <button class="btn gold" onclick="setupTeacher()">${ic('lock')} Yaratish</button>
+      <div id="smsg" class="msg" hidden></div>
+    </div>
+  </div></div></section>`;
+}
+async function setupTeacher() {
+  const id = $('si1').value.trim(), p1 = $('sp1').value, p2 = $('sp2').value, m = $('smsg');
+  const err = t => { m.hidden = false; m.textContent = t; };
+  if (!idOk(id)) return err("ID 2–30 belgi: harf, raqam, nuqta, tire yoki pastki chiziq.");
+  if (p1.length < 8) return err("Parol kamida 8 belgidan iborat bo'lsin.");
+  if (p1 === id || /^(12345678|123456789|1234567890|password|qwertyui|11111111)$/i.test(p1)) return err("Parol juda oddiy. Boshqasini tanlang.");
+  if (p1 !== p2) return err("Parollar mos kelmadi.");
+  try { db.teacher = await makeCred(id, p1); } catch (e) { return err("Bu qurilmada xavfsiz saqlash ishlamadi. Ilovani Telegram yoki https manzil orqali oching."); }
+  save(); S.user = { role: 'teacher', id }; S.tab = 'add'; S.note = ''; render();
+}
+function home() {
+  if (!db.teacher) return setupView();
+  ROLE = 'student';
+  return `
+  <section class="hh"><div class="hg">
+    <div class="ill">${ILL}</div>
+    <div class="hx">
+      <h1 class="ht">Huquqshunoslik</h1>
+      <p class="sub">Olimpiadaga tayyorgarlik platformasi</p>
+      <div class="card lg2">
+        <h2>Tizimga kirish</h2>
+        <div class="seg"><button id="rs" class="on" onclick="setRole('student')">${ic('user')} O'quvchi</button><button id="rt" onclick="setRole('teacher')">${ic('book')} O'qituvchi</button></div>
+        <label for="lid">ID</label><input id="lid" autocomplete="username">
+        <label for="lpw">Parol</label><input id="lpw" type="password" autocomplete="current-password" onkeydown="if(event.key==='Enter')login()">
+        <button class="btn gold" onclick="login()">${ic('lock')} Kirish</button>
+        <div id="lmsg" class="msg" hidden></div>
+        <div class="hbtn"><button class="btn ghost" onclick="openContact()">${ic('send')} Biz bilan aloqa</button><button class="btn ghost" onclick="fgToggle()">${ic('lock')} ID yoki parolni unutdim</button></div>
+      </div>${fgPanel()}
+    </div></div>
+  </section>
+  <div class="wrap"><h2 class="sec">${ic('trophy')} Umumiy reyting</h2><div class="card">${ratingHtml(10)}</div></div>
+  <footer class="foot"><b>Amudaryo tumani</b>Loyiha muallifi: Jumamuratov</footer>`;
+}
+
+async function login() {
+  const role = ROLE, id = $('lid').value.trim(), pw = $('lpw').value, m = $('lmsg');
+  const wait = lockLeft();
+  if (wait) { m.hidden = false; m.textContent = `Juda ko'p xato urinish. ${Math.ceil(wait / 1000)} soniyadan so'ng qayta urinib ko'ring.`; return; }
+  let ok = false;
+  try {
+    if (role === 'teacher') ok = await checkTeacher(id, pw);
+    else ok = !!db.students.find(x => x.id === id && x.pass === pw);
+  } catch (e) { m.hidden = false; m.textContent = "Bu qurilmada xavfsiz kirish ishlamadi. Ilovani Telegram yoki https manzil orqali oching."; return; }
+  if (!ok) { lockFail(); m.hidden = false; m.textContent = "ID yoki parol noto'g'ri. Qayta tekshiring."; return; }
+  lockClear();
+  S.user = { role, id }; S.tab = role === 'teacher' ? 'add' : 'tests'; S.take = null; S.note = '';
+  render();
+}
+function logout() { S.user = null; S.pending = null; render(); }
+
+/* ===== Excel yordamchilari ===== */
+function download(rows, name, sheet) {
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(rows), sheet);
+  XLSX.writeFile(wb, name);
+}
+function readBook(file, cb) {
+  const r = new FileReader();
+  r.onload = e => cb(XLSX.read(e.target.result, { type: 'array' }));
+  r.readAsArrayBuffer(file);
+}
+function readExcel(file, cb) { readBook(file, wb => cb(XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { header: 1, defval: '' }))); }
+function tplTest() {
+  const H = ['Savol turi', 'Sinf', 'Bob', 'Mavzu', 'Darslik sahifasi', 'Savol matni', 'A varianti', 'B varianti', 'C varianti', 'D varianti', "To'g'ri javob", 'Izoh yoki javob mezoni', 'Savol ID', 'BB raqami', 'Blum darajasi', 'Ball', 'Aralashtirish', 'Holat', 'A variant turi', 'B variant turi', 'C variant turi', 'D variant turi', 'Qabul qilinadigan javoblar'];
+  const ex = ['NAMUNA multiple', 8, 'Huquq asoslari', 'Huquq nima?', '5', 'Huquq nima?', "Xulq-atvor qoidalari tizimi", 'Faqat odat', "Shaxsiy fikr", 'Tasodif', 'A', "Huquq — davlat himoyalaydigan qoidalar tizimi.", '8-01-01-001', 'BB-1', 'Eslash', 0.9, "yo'q", 'tayyor', "to'g'ri", 'yaqin tushuncha', 'mantiqiy xato', 'mantiqiy xato', ''];
+  download([H, ex], 'test_import_shablon.xlsx', 'Testlar');
+}
+const tplStud = () => download([['Ism', 'Familiya', 'Sinf', 'ID (ixtiyoriy)', 'Parol (ixtiyoriy)'], ['Vali', 'Aliyev', '9-A', '', '']], 'oquvchilar_shablon.xlsx', 'Oquvchilar');
+
+/* ===== O'QITUVCHI ===== */
+const TT = [['add', 'Test yuklash'], ['bank', 'Test banki'], ['stud', "O'quvchilar"], ['res', 'Natijalar'], ['an', 'Tahlil'], ['rate', 'Reyting'], ['mat', 'Materiallar'], ['chat', 'Chat'], ['prof', 'Profil']];
+function tabs(list) {
+  return `<div class="tabs">${list.map(([k, n]) => `<button class="${S.tab === k ? 'on' : ''}" onclick="S.tab='${k}';S.note='';render()">${ic(TI[k])}<span>${n}</span>${k === 'chat' ? unread() : ''}</button>`).join('')}
+  <button onclick="logout()" style="margin-left:auto">${ic('logout')}<span>Chiqish</span></button></div>`;
+}
+const note = () => S.note ? `<div class="msg">${esc(S.note)}</div>` : '';
+
+function teacherView() {
+  const p = { add: tAdd, bank: tBank, stud: tStud, res: tRes, an: tAn, rate: tRate, mat: tMat, chat: tChat, prof: () => tProf() + tContact() }[S.tab];
+  const b = p();
+  return tabs(TT) + `<div class="wrap">${b}</div>`;
+}
+
+/* -- Test yuklash (Excel import shabloni) -- */
+const NA = x => String(x ?? '').replace(/[‘’ʻʼ`´]/g, "'").trim();
+const HK = { 'savol turi': 'tur', 'sinf': 'sinf', 'bob': 'bob', 'mavzu': 'mavzu', 'darslik sahifasi': 'bet', 'savol matni': 'q', 'a varianti': 'o0', 'b varianti': 'o1', 'c varianti': 'o2', 'd varianti': 'o3', "to'g'ri javob": 'a', 'izoh yoki javob mezoni': 'izoh', 'savol id': 'id', 'bb raqami': 'bb', 'blum darajasi': 'blum', 'ball': 'ball', 'aralashtirish': 'shuf', 'holat': 'holat', 'a variant turi': 't0', 'b variant turi': 't1', 'c variant turi': 't2', 'd variant turi': 't3', 'qabul qilinadigan javoblar': 'acc' };
+const BLUMN = ['Eslash', 'Tushunish', "Qo'llash", 'Tahlil', 'Baholash', 'Sintez'], BLUM = BLUMN.map(x => x.toLowerCase());
+const TURLAR = ['multiple', 'truefalse', 'matching', 'fill', 'short', 'sequence', 'situational'];
+function parseTests(wb) {
+  const out = { errs: [], qs: [] };
+  const ws = wb.Sheets['Testlar'] || wb.Sheets[wb.SheetNames[0]];
+  const rows = XLSX.utils.sheet_to_json(ws, { header: 1, defval: '', raw: true });
+  const hi = rows.findIndex(r => r.some(c => NA(c).toLowerCase() === 'savol turi'));
+  if (hi < 0) { out.errs.push("Sarlavha qatori topilmadi: «Testlar» varag'ida «Savol turi» ustuni bo'lishi kerak."); return out; }
+  const col = {};
+  rows[hi].forEach((c, j) => { const k = HK[NA(c).toLowerCase()]; if (k) col[k] = j; });
+  const miss = ['tur', 'sinf', 'bob', 'mavzu', 'q', 'id'].filter(k => col[k] == null);
+  if (miss.length) { out.errs.push('Ustunlar yetishmayapti: ' + miss.join(', ')); return out; }
+  const seen = new Set();
+  for (let r = hi + 1; r < rows.length; r++) {
+    const row = rows[r], X = k => col[k] == null ? '' : row[col[k]], T = k => NA(X(k));
+    const keys = Object.keys(col);
+    if (keys.every(k => T(k) === '')) continue;
+    if (keys.some(k => T(k).toUpperCase().startsWith('NAMUNA'))) continue;
+    const E = m => out.errs.push(`${r + 1}-qator: ${m}`);
+    const bad = keys.find(k => typeof X(k) === 'string' && /^[=+\-@]/.test(NA(X(k))));
+    if (bad) { E('formula bilan boshlanuvchi katak (' + bad + ')'); continue; }
+    const tur = T('tur').toLowerCase(), holat = (T('holat') || 'tayyor').toLowerCase(), id = T('id'), sinf = parseInt(T('sinf')), q = T('q');
+    if (!TURLAR.includes(tur)) { E("savol turi noto'g'ri: " + tur); continue; }
+    if (!/^\d+-\d+-\d+-\d+$/.test(id)) { E("Savol ID formati noto'g'ri (masalan 8-01-01-001)"); continue; }
+    if (seen.has(id)) { E('takror Savol ID: ' + id); continue; }
+    seen.add(id);
+    const ip = id.split('-');
+    if (!sinf || !T('bob') || !T('mavzu') || !q) { E("sinf, bob, mavzu yoki savol matni yo'q"); continue; }
+    if (+ip[0] !== sinf) { E('Savol ID sinfga mos emas'); continue; }
+    if (holat !== 'tayyor' && holat !== 'qoralama') { E("Holat «qoralama» yoki «tayyor» bo'lishi kerak"); continue; }
+    const o = [0, 1, 2, 3].map(i => T('o' + i));
+    const Q = { id, tur, sinf, bob: T('bob'), mavzu: T('mavzu'), mid: ip.slice(0, 3).join('-'), bobNo: +ip[1], mavzuNo: +ip[2], q, holat, bet: T('bet'), izoh: T('izoh'), bb: T('bb'), blum: T('blum'), ball: parseFloat(T('ball').replace(',', '.')) || 1, shuf: T('shuf').toLowerCase(), vt: [0, 1, 2, 3].map(i => T('t' + i)), o, a: 0 };
+    if (holat === 'tayyor') {
+      if (!Q.bb || !Q.blum || !T('ball')) { E("BB, Blum yoki Ball yo'q"); continue; }
+      if (!BLUM.includes(Q.blum.toLowerCase())) { E("Blum darajasi ro'yxatda yo'q: " + Q.blum); continue; }
+      if (!(Q.ball > 0)) { E("Ball musbat son bo'lsin"); continue; }
+      if (tur === 'multiple' || tur === 'situational') {
+        if (o.some(x => !x)) { E("4 ta variant to'liq emas"); continue; }
+        const L = T('a').toUpperCase();
+        if (L.length !== 1 || !'ABCD'.includes(L)) { E("To'g'ri javob A, B, C yoki D bo'lishi kerak"); continue; }
+        Q.a = 'ABCD'.indexOf(L);
+      } else if (tur === 'truefalse') {
+        const v = T('a').toLowerCase();
+        if (v !== 'true' && v !== 'false') { E('true yoki false yozing'); continue; }
+        Q.a = v;
+      } else if (tur === 'matching') {
+        const it = o.filter(Boolean), pr = it.map(x => x.split('='));
+        if (it.length < 3) { E('kamida 3 juft kerak'); continue; }
+        if (pr.some(p => p.length < 2 || !p[0].trim() || !p.slice(1).join('=').trim())) { E("juftlar «chap = o'ng» ko'rinishida bo'lsin"); continue; }
+        Q.pairs = pr.map(p => ({ l: p[0].trim(), r: p.slice(1).join('=').trim() }));
+      } else if (tur === 'sequence') {
+        const it = o.filter(Boolean);
+        if (it.length < 3) { E('kamida 3 element kerak'); continue; }
+        Q.items = it;
+      } else {
+        const acc = T('acc').split('|').map(x => x.trim()).filter(Boolean);
+        if (!acc.length && Q.izoh) acc.push(Q.izoh);
+        if (!acc.length) { E("javob yo'q (Qabul qilinadigan javoblar)"); continue; }
+        Q.acc = acc;
+      }
+    }
+    out.qs.push(Q);
+  }
+  return out;
+}
+function importTest(f) {
+  if (!f) return;
+  readBook(f, wb => { S.pending = Object.assign({ file: f.name }, parseTests(wb)); S.note = ''; render(); });
+}
+function tAdd() {
+  const p = S.pending;
+  let rep = '';
+  if (p) {
+    const tay = p.qs.filter(q => q.holat === 'tayyor').length, mv = new Set(p.qs.map(q => q.mid)).size;
+    rep = `<div class="msg"><b>${esc(p.file)}</b>: ${p.qs.length} ta savol (${tay} tayyor, ${p.qs.length - tay} qoralama), ${mv} ta mavzu, ${p.errs.length} ta xato.</div>` +
+      (p.errs.length
+        ? `<p class="bad">Xatoli fayl qabul qilinmaydi. Tuzatib, qayta yuklang:</p><ul>${p.errs.slice(0, 15).map(e => `<li>${esc(e)}</li>`).join('')}</ul>${p.errs.length > 15 ? `<p class="mut">Yana ${p.errs.length - 15} ta xato bor.</p>` : ''}`
+        : p.qs.length ? `<button class="btn gold" onclick="saveTests()">Savollarni saqlash</button>` : `<p class="mut">Faylda savol topilmadi.</p>`);
+  }
+  return `<div class="card"><h2>Test yuklash</h2>
+  <p class="mut">Import shablon («Testlar» varag'i) ustun nomlari bo'yicha o'qiladi. Savol ID (8-01-01-001) mavzuni belgilaydi; qayta yuklasangiz savollar ID bo'yicha yangilanadi. O'quvchilarga faqat «tayyor» savollar ko'rinadi. BB, Blum darajasi va variant turlari o'quvchi tahlili uchun ishlatiladi.</p>
+  <button class="btn ghost" onclick="tplTest()">Bo'sh shablon</button>
+  <label for="tf">Excel fayl (.xlsx)</label><input id="tf" type="file" accept=".xlsx,.xls" onchange="importTest(this.files[0])">
+  ${rep}${note()}</div>`;
+}
+function saveTests() {
+  const g = {}; let add = 0, upd = 0;
+  S.pending.qs.forEach(q => (g[q.mid] = g[q.mid] || []).push(q));
+  Object.entries(g).forEach(([mid, qs]) => {
+    const f = qs[0];
+    let t = db.tests.find(x => x.id === mid);
+    if (!t) { t = { id: mid, qs: [], date: Date.now() }; db.tests.push(t); }
+    Object.assign(t, { sinf: f.sinf, bobNo: f.bobNo, mavzu: f.mavzuNo, bob: f.bob, title: f.mavzu });
+    qs.forEach(q => { const c = { ...q }; delete c.mid; const i = t.qs.findIndex(x => x.id === q.id); if (i >= 0) { t.qs[i] = c; upd++; } else { t.qs.push(c); add++; } });
+    t.qs.sort((a, b) => a.id.localeCompare(b.id, undefined, { numeric: true }));
+  });
+  save(); S.pending = null; S.note = `Saqlandi: ${add} ta yangi, ${upd} ta yangilangan savol.`; render();
+}
+
+/* -- Test banki -- */
+function tBank() {
+  if (!db.tests.length) return `<div class="card"><h2>Test banki</h2><p class="mut">Hali test yo'q. «Test yuklash» bo'limidan Excel fayl yuklang.</p></div>`;
+  return `<div class="card"><h2>Test banki</h2><p class="mut">O'quvchilar shu tartibda (sinf, bob, mavzu) o'tadi.</p><div class="tw"><table><tr><th>Sinf</th><th>Bob</th><th>Mavzu</th><th>Tayyor</th><th>Qoralama</th><th></th></tr>
+  ${[...db.tests].sort(cmp).map(t => `<tr><td>${t.sinf}</td><td>${esc(t.bob || '—')}</td><td>${t.mavzu}. ${esc(t.title)}</td><td>${live(t).length}</td><td>${t.qs.length - live(t).length}</td>
+  <td><button class="btn red" onclick="delTest('${t.id}')">O'chirish</button></td></tr>`).join('')}</table></div></div>`;
+}
+function delTest(id) {
+  if (!confirm("Test va uning natijalari o'chiriladi. Davom etasizmi?")) return;
+  db.tests = db.tests.filter(t => t.id !== id); db.results = db.results.filter(r => r.tid !== id);
+  save(); render();
+}
+
+/* -- O'quvchilar -- */
+const rnd = (n, ch) => { const a = new Uint32Array(n); crypto.getRandomValues(a); return [...a].map(x => ch[x % ch.length]).join(''); };
+const genPass = () => rnd(6, 'abcdefghjkmnpqrstuvwxyz23456789');
+const genId = () => 'S-' + String(Math.max(0, ...db.students.map(s => { const m = /^S-(\d+)$/.exec(s.id); return m ? +m[1] : 0; })) + 1).padStart(4, '0');
+const idOk = x => /^[A-Za-z0-9_.-]{2,30}$/.test(x);
+function tStud() {
+  S.gen = S.gen || { id: genId(), pass: genPass() };
+  const e = S.edit && db.students.find(s => s.id === S.edit);
+  return (e ? `<div class="card"><h2>O'quvchini tahrirlash</h2>
+  <label for="en">Ism</label><input id="en" value="${esc(e.name)}"><label for="ef">Familiya</label><input id="ef" value="${esc(e.surname || '')}">
+  <label for="ec">Sinf</label><input id="ec" value="${esc(e.cls || '')}"><label for="ei">ID</label><input id="ei" value="${esc(e.id)}">
+  <label for="ep">Parol</label><input id="ep" value="${esc(e.pass)}">
+  <button class="btn gold" onclick="saveEdit()">Saqlash</button><button class="btn ghost" onclick="S.edit=null;S.note='';render()">Bekor qilish</button>${note()}</div>` : '') +
+  `<div class="card"><h2>Yangi o'quvchi</h2>
+  <label for="sn">Ism</label><input id="sn"><label for="sf">Familiya</label><input id="sf"><label for="sc">Sinf</label><input id="sc">
+  <label for="si">ID (avtomatik)</label><input id="si" value="${S.gen.id}"><label for="sp">Parol (avtomatik)</label><input id="sp" value="${S.gen.pass}">
+  <button class="btn gold" onclick="addStud()">Qo'shish</button><button class="btn ghost" onclick="$('si').value=genId();$('sp').value=genPass()">Yangi ID va parol</button>
+  <h3 style="margin-top:16px">Excel orqali</h3><p class="mut">Ustunlar: Ism | Familiya | Sinf | ID | Parol. ID va parol bo'sh qolsa, avtomatik beriladi.</p>
+  <button class="btn ghost" onclick="tplStud()">Excel shablon</button><input id="sx" type="file" accept=".xlsx,.xls,.csv" onchange="importStud(this.files[0])">${e ? '' : note()}</div>
+  <div class="card"><div class="row"><h3>Ro'yxat (${db.students.length})</h3>${db.students.length ? `<button class="btn ghost" onclick="expStud()">ID va parollarni Excelga yuklash</button>` : ''}</div>
+  ${db.students.length ? `<div class="tw"><table><tr><th>Ism familiya</th><th>Sinf</th><th>ID</th><th>Parol</th><th></th></tr>
+  ${db.students.map(x => `<tr><td>${esc(sname(x))}</td><td>${esc(x.cls)}</td><td>${esc(x.id)}</td><td>${esc(x.pass)}</td>
+  <td><button class="btn ghost" onclick="S.edit='${x.id}';S.note='';render();window.scrollTo(0,0)">Tahrirlash</button><button class="btn red" onclick="delStud('${x.id}')">O'chirish</button></td></tr>`).join('')}</table></div>` : `<p class="mut">O'quvchi qo'shilmagan.</p>`}</div>`;
+}
+function addStud() {
+  const name = $('sn').value.trim(), surname = $('sf').value.trim(), cls = $('sc').value.trim(), id = $('si').value.trim(), pass = $('sp').value.trim();
+  if (!name || !surname) S.note = 'Ism va familiyani kiriting.';
+  else if (!idOk(id)) S.note = "ID 2–30 belgi: harf, raqam, nuqta, tire yoki pastki chiziq.";
+  else if (pass.length < 4) S.note = "Parol kamida 4 belgidan iborat bo'lsin.";
+  else if (db.students.some(x => x.id === id)) S.note = 'Bu ID band. Yangi ID tanlang.';
+  else { db.students.push({ name, surname, cls, id, pass }); save(); S.note = `Qo'shildi: ${name} ${surname}. ID: ${id}, parol: ${pass}`; S.gen = null; }
+  render();
+}
+function importStud(f) {
+  if (!f) return;
+  readExcel(f, rows => {
+    const h = (rows[0] || []).map(c => NA(c).toLowerCase()), ix = k => h.findIndex(c => c.startsWith(k));
+    const c = { n: ix('ism'), f: ix('familiya'), s: ix('sinf'), i: ix('id'), p: ix('parol') };
+    let n = 0;
+    rows.slice(1).forEach(r => {
+      const g = j => j < 0 ? '' : String(r[j] ?? '').trim(), name = g(c.n);
+      if (!name) return;
+      const id = g(c.i) || genId(), pass = g(c.p) || genPass();
+      if (idOk(id) && !db.students.some(x => x.id === id)) { db.students.push({ name, surname: g(c.f), cls: g(c.s), id, pass }); n++; }
+    });
+    S.note = `${n} ta o'quvchi qo'shildi. Bo'sh ID va parollar avtomatik berildi.`; save(); render();
+  });
+}
+function saveEdit() {
+  const old = S.edit, e = db.students.find(x => x.id === old);
+  const name = $('en').value.trim(), surname = $('ef').value.trim(), cls = $('ec').value.trim(), id = $('ei').value.trim(), pass = $('ep').value.trim();
+  if (!name) S.note = 'Ismni kiriting.';
+  else if (!idOk(id)) S.note = "ID 2–30 belgi: harf, raqam, nuqta, tire yoki pastki chiziq.";
+  else if (pass.length < 4) S.note = "Parol kamida 4 belgidan iborat bo'lsin.";
+  else if (id !== old && db.students.some(x => x.id === id)) S.note = 'Bu ID band.';
+  else {
+    if (id !== old) db.results.forEach(r => { if (r.sid === old) r.sid = id; });
+    Object.assign(e, { name, surname, cls, id, pass }); save(); S.edit = null; S.note = "O'zgarishlar saqlandi.";
+  }
+  render();
+}
+function expStud() { download([['Ism', 'Familiya', 'Sinf', 'ID', 'Parol'], ...db.students.map(x => [x.name, x.surname || '', x.cls || '', x.id, x.pass])], 'oquvchilar_id_parol.xlsx', 'Oquvchilar'); }
+function delStud(id) {
+  if (!confirm("O'quvchi o'chirilsinmi?")) return;
+  db.students = db.students.filter(s => s.id !== id); db.results = db.results.filter(r => r.sid !== id);
+  save(); render();
+}
+
+/* -- Natijalar -- */
+function tRes() {
+  if (!db.results.length) return `<div class="card"><h2>Test natijalari</h2><p class="mut">Hali natija yo'q.</p></div>`;
+  return `<div class="card"><div class="row"><h2>Test natijalari</h2><div><button class="btn ghost" onclick="expRes()">Jadvalni yuklash</button><button class="btn ghost" onclick="expDet()">Javoblar (shablon formati)</button></div></div>
+  <div class="tw"><table><tr><th>O'quvchi</th><th>Mavzu</th><th>Natija</th><th>Ball</th><th>Urinish</th><th>Sana</th></tr>
+  ${db.results.map(r => `<tr><td>${esc(stName(r.sid))}</td><td>${esc(tName(r.tid))}</td><td>${pct(r)}%</td><td>${r.score}/${r.total}</td><td>${r.att || 1}</td><td>${fmt(r.date)}</td></tr>`).join('')}</table></div></div>`;
+}
+function expRes() {
+  download([["O'quvchi", 'Mavzu', 'Ball', 'Jami', 'Foiz', 'Urinish', 'Sana'], ...db.results.map(r => [stName(r.sid), tName(r.tid), r.score, r.total, pct(r) + '%', r.att || 1, fdt(r.date)])], 'natijalar.xlsx', 'Natijalar');
+}
+function expDet() {
+  download([['oquvchi_id', 'savol_id', 'tanlangan', 'togri', 'vaqt_soniya', 'sana', 'urinish', 'test_id'],
+    ...db.results.flatMap(r => (r.det || []).map(d => [r.sid, d.q, d.sel, d.ok ? 1 : 0, d.t || 0, fdt(r.date), r.att || 1, r.tid]))], 'natija_javoblar.xlsx', 'Natija');
+}
+
+/* -- Tahlil -- */
+const lvl = p => p >= 80 ? ['Kuchli', 'ok'] : p >= 60 ? ["O'rta", 'mid'] : ['Zaif', 'bad'];
+const daraja = p => p >= 85 ? 'Yuqori' : p >= 70 ? "O'rta-yuqori" : p >= 50 ? "O'rta" : 'Past';
+const lastRes = sid => { const m = {}; db.results.filter(r => r.sid === sid).forEach(r => { if (!m[r.tid] || r.date >= m[r.tid].date) m[r.tid] = r; }); return Object.values(m); };
+function agg(rs) {
+  const A = { mav: {}, bb: {}, blum: {}, trap: {} };
+  const add = (g, k, ok) => { const o = g[k] = g[k] || { n: 0, c: 0 }; o.n++; if (ok) o.c++; };
+  rs.forEach(r => {
+    const t = db.tests.find(x => x.id === r.tid);
+    if (!t || !r.det) return;
+    r.det.forEach(d => {
+      const q = t.qs.find(x => x.id === d.q);
+      if (!q) return;
+      add(A.mav, label(t), d.ok);
+      if (q.bb) add(A.bb, `${t.mavzu}-mavzu · ${q.bb}`, d.ok);
+      const bi = BLUM.indexOf(NA(q.blum).toLowerCase());
+      if (bi >= 0) add(A.blum, BLUMN[bi], d.ok);
+      const vi = 'ABCD'.indexOf(d.sel), vt = q.vt && vi >= 0 && d.sel.length === 1 ? q.vt[vi] : '';
+      if (!d.ok && vt && NA(vt).toLowerCase() !== "to'g'ri") A.trap[vt] = (A.trap[vt] || 0) + 1;
+    });
+  });
+  return A;
+}
+function rowsHtml(g, order) {
+  const ks = (order || Object.keys(g)).filter(k => g[k]);
+  if (!ks.length) return `<p class="mut">Ma'lumot yo'q.</p>`;
+  return `<div class="tw"><table><tr><th>Nomi</th><th>Natija</th><th></th></tr>${ks.map(k => {
+    const o = g[k], p = Math.round(o.c / o.n * 100), [n, c] = lvl(p);
+    return `<tr><td>${esc(k)}<div class="mut">${o.c}/${o.n} savol</div></td><td style="min-width:110px"><div class="bar"><i class="${c}" style="width:${p}%"></i></div></td><td><b class="${c}">${p}% · ${n}</b></td></tr>`;
+  }).join('')}</table></div>`;
+}
+function tAn() {
+  const m = S.aMode || 'cls', B = (k, n) => `<button class="${m === k ? 'on' : ''}" onclick="S.aMode='${k}';render()">${n}</button>`;
+  return `<div class="card"><h2>Tahlil</h2><div class="seg">${B('cls', 'Umumiy')}${B('stud', "O'quvchi bo'yicha")}${B('test', 'Test bo\'yicha')}</div></div>` + (m === 'cls' ? anCls() : m === 'stud' ? anStud() : anTest());
+}
+function agg2(rs) {
+  const B = { bob: {}, mav: {}, blum: {}, bb: {} };
+  const add = (g, k, ok, init) => { const o = g[k] = g[k] || Object.assign({ n: 0, c: 0, wb: new Set(), ab: new Set() }, init); o.n++; if (ok) o.c++; return o; };
+  rs.forEach(r => {
+    const t = db.tests.find(x => x.id === r.tid);
+    if (!t || !r.det) return;
+    r.det.forEach(d => {
+      const q = t.qs.find(x => x.id === d.q);
+      if (!q) return;
+      add(B.bob, `${t.sinf}|${t.bobNo || 0}`, d.ok, { name: t.bobNo ? `${t.bobNo}-bob: ${t.bob || ''}` : (t.bob || "Bob ko'rsatilmagan"), ord: t.sinf * 1000 + (t.bobNo || 0) });
+      add(B.mav, t.id, d.ok, { name: label(t), t });
+      const bi = BLUM.indexOf(NA(q.blum).toLowerCase());
+      if (bi >= 0) add(B.blum, bi, d.ok, {});
+      if (q.bb) {
+        const o = add(B.bb, `${t.id}|${NA(q.bb)}`, d.ok, { t, bb: NA(q.bb) }), bet = NA(q.bet);
+        if (bet) { o.ab.add(bet); if (!d.ok) o.wb.add(bet); }
+      }
+    });
+  });
+  return B;
+}
+function donut(p) {
+  const r = 42, c = 2 * Math.PI * r, k = lvl(p)[1], col = { ok: 'var(--ok)', mid: '#c9962b', bad: 'var(--red)' }[k];
+  return `<svg viewBox="0 0 100 100" width="100%" role="img" aria-label="${p}%"><circle cx="50" cy="50" r="${r}" fill="none" stroke="var(--line)" stroke-width="12"/><circle cx="50" cy="50" r="${r}" fill="none" stroke="${col}" stroke-width="12" stroke-dasharray="${(c * p / 100).toFixed(1)} ${c.toFixed(1)}" transform="rotate(-90 50 50)"/><text x="50" y="57" text-anchor="middle" font-size="22" font-weight="bold" fill="currentColor">${p}%</text></svg>`;
+}
+const dcard = (name, sub, p) => { const [l, k] = lvl(p); return `<div class="dc"><div class="dsv">${donut(p)}</div><div class="dn">${esc(name)}</div><div class="mut">${sub}</div><b class="${k}">${l}</b></div>`; };
+const pagesTxt = set => [...set].sort((a, b) => parseInt(a) - parseInt(b) || String(a).localeCompare(b)).join(', ');
+const ADV = {
+  'Eslash': "asosiy tushuncha va atamalarni qisqa konspekt yoki kartochkalar orqali yodlang.",
+  'Tushunish': "qoidalarni o'z so'zingiz bilan tushuntirib, misollar keltirib o'qing.",
+  "Qo'llash": "amaliy va holatli masalalarni ko'proq yeching.",
+  'Tahlil': "holatlarni qismlarga ajratib, sabab-oqibat va farqlarni solishtirib ko'ring.",
+  'Baholash': "qaror va dalillarni asoslab baholash mashqlarini bajaring.",
+  'Sintez': "reja, xulosa yoki mini-loyiha tuzib, fikringizni dalillar bilan yozing."
+};
+function anStud() {
+  if (!db.students.length) return `<div class="card"><p class="mut">O'quvchilar ro'yxati bo'sh.</p></div>`;
+  const sid = S.aStud && db.students.some(x => x.id === S.aStud) ? S.aStud : (db.students.find(x => db.results.some(r => r.sid === x.id)) || db.students[0]).id;
+  const sel = `<label for="as">O'quvchi</label><select id="as" onchange="S.aStud=this.value;render()">${db.students.map(x => `<option value="${esc(x.id)}" ${x.id === sid ? 'selected' : ''}>${esc(sname(x))} (${esc(x.id)})</option>`).join('')}</select>`;
+  const rs = lastRes(sid);
+  if (!rs.length) return `<div class="card">${sel}<p class="mut">Bu o'quvchi hali test topshirmagan.</p></div>`;
+  const A = agg(rs), B = agg2(rs), P = o => Math.round(o.c / o.n * 100);
+  const avg = Math.round(rs.reduce((a, r) => a + pct(r), 0) / rs.length), done = rs.filter(r => pct(r) === 100).length;
+  const bobs = Object.values(B.bob).sort((a, b) => a.ord - b.ord), mavs = Object.values(B.mav).sort((a, b) => cmp(a.t, b.t));
+  const bbs = Object.values(B.bb).map(o => Object.assign(o, { p: P(o) }));
+  const str = bbs.filter(o => o.p >= 80).sort((a, b) => b.p - a.p), weak = bbs.filter(o => o.p < 60).sort((a, b) => a.p - b.p);
+  const bl = BLUMN.map((nm, i) => ({ nm, o: B.blum[i] }));
+  const weakBl = bl.filter(x => x.o && P(x.o) < 60), strBl = bl.filter(x => x.o && P(x.o) >= 80);
+  const bbRow = (o, wrong) => { const pg = wrong && o.wb.size ? o.wb : o.ab, k = lvl(o.p)[1]; return `<div style="margin:10px 0"><div class="row"><b>${o.t.mavzu}-mavzu · ${esc(o.bb)}</b><b class="${k}">${o.p}%</b></div><div class="mut">${esc(o.t.title || '')}${pg.size ? ' · darslik: ' + esc(pagesTxt(pg)) + '-bet' : ''}</div><div class="bar"><i class="${k}" style="width:${o.p}%"></i></div></div>`; };
+  const rec = recsOf(rs);
+  const traps = Object.entries(A.trap).sort((a, b) => b[1] - a[1]);
+  return `<div class="card">${sel}
+  <div class="sumr"><div class="dsv big3">${donut(avg)}</div><div><h3>Umumiy daraja: ${daraja(avg)}</h3><p class="mut">Topshirilgan mavzu: ${rs.length} · 100% o'zlashtirilgan: ${done}<br>Eng so'nggi urinishlar asosida. Kuchli: 80% va undan yuqori, o'rta: 60–79%, zaif: 60% dan past.</p></div></div></div>
+  <div class="card"><h2>${ic('book')} Bob bo'yicha o'zlashtirish</h2><div class="dg">${bobs.map(o => dcard(o.name, `${o.c}/${o.n} savol`, P(o))).join('')}</div></div>
+  <div class="card"><h2>${ic('layers')} Mavzu bo'yicha o'zlashtirish</h2><div class="dg">${mavs.map(o => dcard(o.name, `${o.c}/${o.n} savol`, P(o))).join('')}</div></div>
+  <div class="card"><h2>${ic('chart')} Blum taksonomiyasi</h2><div class="dg">${bl.map(x => x.o ? dcard(x.nm, `${x.o.c}/${x.o.n} savol`, P(x.o)) : `<div class="dc"><div class="dn">${x.nm}</div><div class="mut">Savol yo'q</div></div>`).join('')}</div>
+  <p><b class="ok">Yutuqlari:</b> ${strBl.length ? strBl.map(x => x.nm + ' (' + P(x.o) + '%)').join(', ') : "aniq kuchli daraja yo'q"}</p>
+  <p><b class="bad">Kamchiliklari:</b> ${weakBl.length ? weakBl.map(x => x.nm + ' (' + P(x.o) + '%)').join(', ') : "aniq zaif daraja aniqlanmadi"}</p></div>
+  <div class="g2"><div class="card"><h2 class="ok">${ic('check')} Yutuqlar</h2><p class="mut">Bilim birliklari, 80% va undan yuqori.</p>${str.length ? str.map(o => bbRow(o, false)).join('') : `<p class="mut">Hozircha yo'q.</p>`}</div>
+  <div class="card"><h2 class="bad">${ic('edit')} Kamchiliklar</h2><p class="mut">Bilim birliklari, 60% dan past. Darslik betlari xato qilingan savollar bo'yicha.</p>${weak.length ? weak.map(o => bbRow(o, true)).join('') : `<p class="mut">Aniq kamchilik aniqlanmadi.</p>`}</div></div>
+  <div class="card"><h2>${ic('file')} Tavsiyalar</h2>${rec.length ? `<ol class="rec">${rec.map(x => `<li>${x}</li>`).join('')}</ol>` : `<p class="ok">Barcha ko'rsatkichlar yaxshi. Keyingi mavzuga o'tishi mumkin.</p>`}</div>
+  ${traps.length ? `<div class="card"><h3>Tushgan tuzoqlar</h3><p class="mut">Noto'g'ri tanlangan variantlarning turi.</p>${traps.map(([k, n]) => `<div class="row"><span>${esc(k)}</span><b>${n} marta</b></div>`).join('')}</div>` : ''}`;
+}
+function anTest() {
+  const o = ordered();
+  if (!o.length) return `<div class="card"><p class="mut">Tahlil uchun test kerak.</p></div>`;
+  const t = o.find(x => x.id === S.aTest) || o[0], rs = db.results.filter(r => r.tid === t.id), L = live(t);
+  const okQ = (r, q, i) => { if (r.det) { const d = r.det.find(x => x.q === q.id); return d ? d.ok : null; } return r.ans ? r.ans[i] === q.a : null; };
+  const per = L.map((q, i) => { const v = rs.map(r => okQ(r, q, i)).filter(x => x !== null); return v.length ? Math.round(v.filter(Boolean).length / v.length * 100) : 0; });
+  const A = agg([...new Set(rs.map(r => r.sid))].flatMap(sid => lastRes(sid).filter(r => r.tid === t.id)));
+  const avg = rs.length ? Math.round(rs.reduce((a, r) => a + pct(r), 0) / rs.length) : 0;
+  return `<div class="card"><label for="at">Testni tanlang</label>
+  <select id="at" onchange="S.aTest=this.value;render()">${o.map(x => `<option value="${x.id}" ${x.id === t.id ? 'selected' : ''}>${esc(label(x))}</option>`).join('')}</select>
+  <p>Urinishlar: <b>${rs.length}</b> · O'rtacha natija: <b>${avg}%</b></p>
+  ${rs.length ? L.map((q, i) => `<div style="margin:12px 0"><div class="mut">${i + 1}. ${esc(q.q)}</div><div class="row"><div class="bar" style="flex:1"><i class="${lvl(per[i])[1]}" style="width:${per[i]}%"></i></div><b>${per[i]}%</b></div></div>`).join('') : `<p class="mut">Hali hech kim topshirmagan.</p>`}</div>
+  ${rs.length ? `<div class="card"><h3>Bilim birliklari bo'yicha (sinf)</h3>${rowsHtml(A.bb)}</div><div class="card"><h3>Blum darajalari bo'yicha (sinf)</h3>${rowsHtml(A.blum, BLUMN)}</div>` : ''}`;
+}
+
+/* -- Profil -- */
+function tProf() {
+  return `<div class="card"><h2>O'qituvchi profili</h2><p class="mut">Hozirgi ID: <b>${esc(db.teacher.id)}</b></p>
+  <label for="pp0">Joriy parol</label><input id="pp0" type="password" autocomplete="current-password">
+  <label for="pi">Yangi ID</label><input id="pi" value="${esc(db.teacher.id)}">
+  <label for="pp1">Yangi parol (o'zgartirmasangiz, bo'sh qoldiring)</label><input id="pp1" type="password" autocomplete="new-password">
+  <label for="pp2">Yangi parolni takrorlang</label><input id="pp2" type="password" autocomplete="new-password">
+  <button class="btn gold" onclick="saveProf()">Saqlash</button>${note()}</div>`;
+}
+async function saveProf() {
+  const id = $('pi').value.trim(), p1 = $('pp1').value, p2 = $('pp2').value;
+  let okOld = false; try { okOld = await checkTeacher(db.teacher.id, $('pp0').value); } catch (e) {}
+  if (!okOld) S.note = "Joriy parol noto'g'ri.";
+  else if (!idOk(id)) S.note = "ID 2–30 belgi: harf, raqam, nuqta, tire yoki pastki chiziq.";
+  else if (p1 && p1.length < 8) S.note = "Yangi parol kamida 8 belgidan iborat bo'lsin.";
+  else if (p1 !== p2) S.note = 'Yangi parollar mos kelmadi.';
+  else {
+    try { db.teacher = p1 ? await makeCred(id, p1) : { ...db.teacher, id }; save(); S.note = "Saqlandi. Keyingi kirishda yangi ma'lumotlardan foydalaning."; }
+    catch (e) { S.note = "Saqlab bo'lmadi. Ilovani https manzil orqali oching."; }
+  }
+  render();
+}
+
+/* ===== O'QUVCHI ===== */
+const ST = [['tests', 'Mavzularim'], ['mine', 'Natijalarim'], ['rec', 'Tavsiyalar'], ['rate', 'Reyting'], ['mat', 'Materiallar'], ['chat', 'Ustoz bilan chat']];
+const myRes = () => db.results.filter(r => r.sid === S.user.id);
+function studentView() {
+  if (S.take) return takeView();
+  if (S.out) return outView();
+  const me = db.students.find(s => s.id === S.user.id);
+  const body = { tests: sTests, mine: sRes, rec: recCard, rate: sRate, mat: sMat, chat: sChat }[S.tab]();
+  return tabs(ST) + `<div class="wrap"><p class="mut">${esc(me ? sname(me) : '')}${me && me.cls ? ' · ' + esc(me.cls) : ''}</p>${body}</div>`;
+}
+function sTests() {
+  const o = ordered();
+  if (!o.length) return `<div class="card"><h2>Mavzularim</h2><p class="mut">O'qituvchi hali mavzu qo'shmagan.</p></div>`;
+  const u = unlockedIdx(S.user.id);
+  return `<div class="card"><h2>Mavzularim</h2>
+  <p class="mut">Bajarilgan: ${u}/${o.length} mavzu. Keyingi mavzu ochilishi uchun joriy mavzuda 100% natija kerak. Ketma-ket 2 urinishda 100% bo'lmasa, mavzu 24 soatga bloklanadi.</p>
+  <div class="bar"><i style="width:${Math.round(u / o.length * 100)}%"></i></div>
+  ${o.map((t, i) => {
+    const tried = myRes().some(r => r.tid === t.id);
+    let st;
+    if (i < u) st = `<b class="ok">${ic('check')} 100%</b>`;
+    else if (i === u) st = blockUntil(S.user.id, t.id) ? blockMsg(t.id) : `${tried ? `<span class="mut">Eng yuqori: ${best(S.user.id, t.id)}%</span> ` : ''}<button class="btn gold" onclick="startTest('${t.id}')">${tried ? 'Qayta urinish' : 'Boshlash'}</button>`;
+    else st = `<span class="mut">${ic('lock')} Yopiq</span>`;
+    return `<div class="row" style="padding:12px 0;border-bottom:1px solid var(--line);${i > u ? 'opacity:.55' : ''}"><div><b>${esc(label(t))}</b><div class="mut">${live(t).length} ta savol</div></div><div>${st}</div></div>`;
+  }).join('')}</div>`;
+}
+function shuf(a) { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
+function startTest(id) {
+  const bu = blockUntil(S.user.id, id);
+  if (bu) { alert("Bu mavzu bloklangan. " + leftTxt(bu) + " dan so'ng qayta urinish mumkin."); return; }
+  const o = ordered();
+  if (o.findIndex(t => t.id === id) > unlockedIdx(S.user.id)) return;
+  const t = o.find(x => x.id === id);
+  S.shuf = {}; S.tt = {}; S.t0 = S.tl = Date.now();
+  live(t).forEach(q => {
+    let a = [];
+    if (q.tur === 'multiple' || q.tur === 'situational') { a = [0, 1, 2, 3].filter(j => q.o[j]); if (q.shuf === 'ha') shuf(a); }
+    else if (q.tur === 'matching' || q.tur === 'sequence') {
+      a = shuf([...Array((q.pairs || q.items).length).keys()]);
+      if (q.tur === 'sequence' && a.every((x, p) => x === p)) a.reverse();
+    }
+    S.shuf[q.id] = a;
+  });
+  S.out = null; S.take = id; render(); window.scrollTo(0, 0);
+}
+function qHtml(q, i) {
+  const sh = S.shuf[q.id] || [], T = q.tur;
+  let b = '';
+  if (T === 'multiple' || T === 'situational') b = sh.map((j, p) => `<label class="o"><input type="radio" name="q${i}" value="${j}"> <span>${'ABCD'[p]}) ${esc(q.o[j])}</span></label>`).join('');
+  else if (T === 'truefalse') b = [['true', "To'g'ri"], ['false', "Noto'g'ri"]].map(([v, n]) => `<label class="o"><input type="radio" name="q${i}" value="${v}"> <span>${n}</span></label>`).join('');
+  else if (T === 'matching') b = q.pairs.map((p, j) => `<div class="pr"><span>${esc(p.l)}</span><select name="q${i}_${j}"><option value="">Tanlang</option>${sh.map(k => `<option value="${k}">${esc(q.pairs[k].r)}</option>`).join('')}</select></div>`).join('');
+  else if (T === 'sequence') b = `<div class="mut">Har bir elementga to'g'ri tartib raqamini tanlang</div>` + sh.map((k, p) => `<div class="pr"><span>${esc(q.items[k])}</span><select name="q${i}_${p}"><option value="">№</option>${sh.map((_, m) => `<option value="${m + 1}">${m + 1}</option>`).join('')}</select></div>`).join('');
+  else b = `<input type="text" name="q${i}" placeholder="Javobingiz" autocomplete="off">`;
+  return `<div class="q"><b>${i + 1}. ${esc(q.q)}</b>${b}</div>`;
+}
+function tick(e) {
+  const m = /^q(\d+)/.exec(e.target.name || '');
+  if (m && S.tt[m[1]] == null) { const n = Date.now(); S.tt[m[1]] = Math.round((n - S.tl) / 1000); S.tl = n; }
+}
+function takeView() {
+  const t = db.tests.find(x => x.id === S.take);
+  return `<div class="wrap"><div class="card" onchange="tick(event)"><h2>${esc(label(t))}</h2>
+  ${live(t).map(qHtml).join('')}
+  <button class="btn gold" onclick="finish()">Yakunlash</button>
+  <button class="btn ghost" onclick="S.take=null;render()">Bekor qilish</button></div></div>`;
+}
+const nz = x => NA(x).replace(/\s+/g, ' ').toLowerCase();
+function readResp(q, i) {
+  const g = n => { const e = document.querySelector(`[name="${n}"]:checked`); return e ? e.value : ''; };
+  const v = n => { const e = document.querySelector(`[name="${n}"]`); return e ? e.value : ''; };
+  if (q.tur === 'matching') return q.pairs.map((_, j) => v(`q${i}_${j}`));
+  if (q.tur === 'sequence') return q.items.map((_, p) => v(`q${i}_${p}`));
+  if (q.tur === 'fill' || q.tur === 'short') return v('q' + i).trim();
+  return g('q' + i);
+}
+function gradeQ(q, r) {
+  const T = q.tur;
+  if (T === 'matching') { const blank = r.some(x => x === ''); return { blank, ok: !blank && r.every((x, j) => +x === j), sel: r.map((x, j) => `${j + 1}-${x === '' ? '?' : +x + 1}`).join(',') }; }
+  if (T === 'sequence') { const sh = S.shuf[q.id], blank = r.some(x => x === ''); return { blank, ok: !blank && r.every((x, p) => +x === sh[p] + 1), sel: r.join('-') }; }
+  if (T === 'fill' || T === 'short') return { blank: r === '', ok: q.acc.some(a => nz(a) === nz(r)), sel: r };
+  if (T === 'truefalse') return { blank: r === '', ok: r === String(q.a), sel: r };
+  return { blank: r === '', ok: r !== '' && +r === q.a, sel: r === '' ? '' : 'ABCD'[+r] };
+}
+function finish() {
+  const t = db.tests.find(x => x.id === S.take), L = live(t);
+  const G = L.map((q, i) => gradeQ(q, readResp(q, i)));
+  if (G.some(g => g.blank) && !confirm("Ba'zi savollarga javob berilmadi. Baribir yakunlaysizmi?")) return;
+  let sc = 0, tot = 0;
+  const det = L.map((q, i) => { const b = q.ball || 1; tot += b; if (G[i].ok) sc += b; return { q: q.id, sel: G[i].sel, ok: G[i].ok, t: S.tt[i] || 0 }; });
+  const att = db.results.filter(r => r.sid === S.user.id && r.tid === t.id).length + 1;
+  const r = { tid: t.id, sid: S.user.id, score: Math.round(sc * 100) / 100, total: Math.round(tot * 100) / 100, det, att, date: Date.now() };
+  db.results.push(r); save();
+  S.take = null; S.out = { tid: t.id, r }; render(); window.scrollTo(0, 0);
+}
+/* Faqat 100% bo'lganda ball, to'g'ri javoblar va izohlar ko'rsatiladi */
+const ansText = q => {
+  const T = q.tur;
+  if (T === 'multiple' || T === 'situational') return `${'ABCD'[q.a]}) ${q.o[q.a]}`;
+  if (T === 'truefalse') return q.a === 'true' ? "To'g'ri" : "Noto'g'ri";
+  if (T === 'matching') return q.pairs.map(p => `${p.l} → ${p.r}`).join('; ');
+  if (T === 'sequence') return q.items.map((x, i) => `${i + 1}) ${x}`).join('; ');
+  return (q.acc || []).join(' / ');
+};
+function reviewHtml(t, r) {
+  return `<p><b>Ball: ${r.score}/${r.total}</b></p>` + live(t).map((q, i) => `<div class="q"><b>${i + 1}. ${esc(q.q)}</b>
+  <div class="ok">To'g'ri javob: ${esc(ansText(q))}</div>${q.izoh ? `<div class="mut">Izoh: ${esc(q.izoh)}</div>` : ''}</div>`).join('');
+}
+function outView() {
+  const t = db.tests.find(x => x.id === S.out.tid), r = S.out.r, p = pct(r);
+  return `<div class="wrap"><div class="card"><h2>${esc(label(t))}</h2>
+  ${p < 100
+    ? `<div class="big">${p}%</div><p>Keyingi mavzu ochilishi uchun 100% natija kerak. Mavzuni takrorlab, qayta urinib ko'ring.</p>
+       ${blockUntil(S.user.id, t.id) ? blockMsg(t.id) : `<button class="btn gold" onclick="startTest('${t.id}')">Qayta urinish</button>`}`
+    : `<div class="big ok">100%</div><p>Tabriklaymiz! Mavzu to'liq o'zlashtirildi.</p>${reviewHtml(t, r)}`}
+  <button class="btn ghost" onclick="S.out=null;S.tab='tests';render()">Mavzular ro'yxati</button></div>${recCard()}</div>`;
+}
+function sRes() {
+  const rs = myRes();
+  if (!rs.length) return `<div class="card"><h2>Natijalarim</h2><p class="mut">Hali test topshirmagansiz. «Mavzularim» bo'limiga o'ting.</p></div>`;
+  return `<div class="card"><h2>Natijalarim</h2><div class="tw"><table><tr><th>Mavzu</th><th>Natija</th><th>Sana</th><th></th></tr>
+  ${rs.map(r => `<tr><td>${esc(tName(r.tid))}</td><td>${pct(r)}%</td><td>${fmt(r.date)}</td>
+  <td>${pct(r) === 100 ? `<button class="btn ghost" onclick="S.out={tid:'${r.tid}',r:db.results.find(x=>x.sid===S.user.id&&x.date===${r.date})};render()">Ko'rish</button>` : ''}</td></tr>`).join('')}</table></div></div>`;
+}
+
+/* ===== Yangi: reyting, tahlil, chat ===== */
+const ILL = `<svg viewBox="0 0 400 400" role="img" aria-label="School No. 84 — Online Law Platform" fill="none" stroke-linecap="round" stroke-linejoin="round" width="100%" height="100%"><defs><linearGradient id="lg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f7e08a"/><stop offset=".5" stop-color="#e2b24a"/><stop offset="1" stop-color="#a97a1a"/></linearGradient><path id="lt" d="M52 200A148 148 0 0 1 348 200"/><path id="lb" d="M31 200A169 169 0 0 0 369 200"/></defs><circle cx="200" cy="200" r="192" stroke="url(#lg)" stroke-width="4"/><circle cx="200" cy="200" r="184" stroke="url(#lg)" stroke-width="1.5"/><circle cx="200" cy="200" r="130" fill="#0d2250" stroke="url(#lg)" stroke-width="4"/><circle cx="200" cy="200" r="122" stroke="url(#lg)" stroke-width="1.5"/><g font-family="Times New Roman,Times,serif" font-size="25" font-weight="bold" letter-spacing="5" fill="url(#lg)"><text><textPath href="#lt" startOffset="50%" text-anchor="middle">SCHOOL No. 84</textPath></text><text><textPath href="#lb" startOffset="50%" text-anchor="middle">ONLINE LAW PLATFORM</textPath></text></g><path d="M40 194l6 6-6 6-6-6zM360 194l6 6-6 6-6-6z" fill="url(#lg)"/><g stroke="url(#lg)" stroke-width="4"><path d="M120 150h160M200 126v160"/><path d="M130 150 100 218M130 150l60 68M270 150l-60 68M270 150l30 68" stroke-width="2.5"/></g><g fill="url(#lg)" stroke="none"><circle cx="200" cy="120" r="7"/><circle cx="120" cy="150" r="5"/><circle cx="280" cy="150" r="5"/><path d="M98 218Q130 244 162 218Z"/><path d="M238 218Q270 244 302 218Z"/><rect x="190" y="130" width="20" height="152" rx="2"/><rect x="176" y="124" width="48" height="8" rx="2"/><path d="M166 290h68l-8-12h-52z"/><circle cx="183" cy="122" r="6"/><circle cx="217" cy="122" r="6"/></g></svg>`;
+
+/* Reyting: avval 100% o'zlashtirilgan mavzular soni, so'ng o'rtacha natija */
+function ranking() {
+  const o = ordered();
+  return db.students.map(s => {
+    const bs = o.filter(t => db.results.some(r => r.sid === s.id && r.tid === t.id)).map(t => best(s.id, t.id));
+    return { s, n: bs.length, done: bs.filter(v => v === 100).length, avg: bs.length ? Math.round(bs.reduce((a, b) => a + b, 0) / bs.length) : 0 };
+  }).filter(x => x.n).sort((a, b) => b.done - a.done || b.avg - a.avg || sname(a.s).localeCompare(sname(b.s)));
+}
+function ratingHtml(lim, me) {
+  const rk = ranking();
+  if (!rk.length) return `<p class="mut">Reyting hali shakllanmagan. Birinchi natijalar paydo bo'lgach, shu yerda e'lon qilinadi.</p>`;
+  const top = rk.slice(0, 3), hs = [150, 115, 90];
+  const pod = `<div class="pod">${[1, 0, 2].filter(i => top[i]).map(i => `<div class="pd"><div class="pn">${esc(sname(top[i].s))}</div><div class="st" style="height:${hs[i]}px"><b>${i + 1}</b><span>${top[i].avg}%</span></div></div>`).join('')}</div>`;
+  const row = (x, i) => `<tr class="${x.s.id === me ? 'meR' : ''}"><td>${i + 1}</td><td>${esc(sname(x.s))}${x.s.id === me ? ' (siz)' : ''}</td><td>${esc(x.s.cls || '')}</td><td>${x.done}/${x.n}</td><td><b>${x.avg}%</b></td></tr>`;
+  const mi = me ? rk.findIndex(x => x.s.id === me) : -1;
+  const rows = rk.slice(3, lim).map((x, i) => row(x, i + 3)).join('') + (mi >= lim ? row(rk[mi], mi) : '');
+  return pod + (rows ? `<div class="tw"><table><tr><th>№</th><th>O'quvchi</th><th>Sinf</th><th>100% mavzu</th><th>O'rtacha</th></tr>${rows}</table></div>` : '') +
+    `<p class="mut">Tartib: avval 100% o'zlashtirilgan mavzular soni, so'ng o'rtacha natija bo'yicha.</p>`;
+}
+const tRate = () => `<div class="card"><h2>Umumiy reyting</h2>${ratingHtml(999)}</div>`;
+const sRate = () => `<div class="card"><h2>Umumiy reyting</h2>${ratingHtml(999, S.user.id)}</div>`;
+
+/* Umumiy tahlil (o'qituvchi) */
+function barRow(n, p, sub) {
+  const [l, c] = lvl(p);
+  return `<div style="margin:12px 0"><div class="row"><span>${esc(n)}</span><b class="${c}">${p}% · ${l}</b></div><div class="bar"><i class="${c}" style="width:${p}%"></i></div>${sub ? `<div class="mut">${esc(sub)}</div>` : ''}</div>`;
+}
+function anCls() {
+  if (!db.results.length) return `<div class="card"><p class="mut">Hali natija yo'q. O'quvchilar test topshirgach, umumiy tahlil shu yerda paydo bo'ladi.</p></div>`;
+  const rk = ranking(), avg = rk.length ? Math.round(rk.reduce((a, x) => a + x.avg, 0) / rk.length) : 0;
+  const C = (n, v) => `<div class="card"><div class="mut">${n}</div><div class="big2">${v}</div></div>`;
+  const tests = ordered().map(t => { const v = db.students.filter(s => db.results.some(r => r.sid === s.id && r.tid === t.id)).map(s => best(s.id, t.id)); return { t, n: v.length, p: v.length ? Math.round(v.reduce((a, b) => a + b, 0) / v.length) : 0 }; }).filter(x => x.n);
+  const qs = {};
+  db.results.forEach(r => {
+    const t = db.tests.find(x => x.id === r.tid);
+    if (!t || !r.det) return;
+    r.det.forEach(d => { const q = t.qs.find(x => x.id === d.q); if (!q) return; const o = qs[d.q] = qs[d.q] || { q: q.q, t: t.mavzu, n: 0, c: 0 }; o.n++; if (d.ok) o.c++; });
+  });
+  const hard = Object.values(qs).filter(o => o.n >= 2).map(o => ({ ...o, p: Math.round(o.c / o.n * 100) })).sort((a, b) => a.p - b.p).slice(0, 5);
+  const weak = rk.filter(x => x.avg < 60), idle = db.students.length - rk.length;
+  return `<div class="stats">${C("O'quvchilar", db.students.length)}${C('Test topshirgan', rk.length)}${C("O'rtacha natija", avg + '%')}${C('Jami urinishlar', db.results.length)}</div>
+  <div class="g2"><div class="card"><h3>Mavzular bo'yicha o'rtacha</h3>${tests.map(x => barRow(label(x.t), x.p, `${x.n} ta o'quvchi topshirgan`)).join('')}</div>
+  <div class="card"><h3>Eng qiyin savollar</h3>${hard.length ? hard.map(o => barRow(o.q.slice(0, 90), o.p, `${o.t}-mavzu · ${o.n} marta javob berilgan`)).join('') : `<p class="mut">Ma'lumot yetarli emas: savol kamida 2 marta yechilishi kerak.</p>`}</div></div>
+  <div class="card"><h3>Diqqat talab qiladigan o'quvchilar</h3><p class="mut">O'rtacha natijasi 60% dan past.</p>
+  ${weak.length ? weak.map(x => `<div class="row" style="padding:6px 0"><span>${esc(sname(x.s))} <span class="mut">${esc(x.s.cls || '')}</span></span><b class="bad">${x.avg}%</b><button class="btn ghost" onclick="S.cs='${x.s.id}';S.tab='chat';render()">Xabar yozish</button></div>`).join('') : `<p class="ok">Hozircha bunday o'quvchi yo'q.</p>`}
+  ${idle > 0 ? `<p class="mut">Hali test topshirmaganlar: ${idle} ta.</p>` : ''}</div>`;
+}
+
+/* ===== Chat ===== */
+let MR = null, CH = [];
+const unreadN = () => !S.user ? 0 : S.user.role === 'teacher' ? db.msgs.filter(m => m.by === 'student' && !m.read).length : db.msgs.filter(m => m.sid === S.user.id && m.by === 'teacher' && !m.read).length;
+const unread = () => { const n = unreadN(); return n ? ` <b class="bdg">${n}</b>` : ''; };
+const attHtml = a => {
+  if (!a || !/^data:/.test(a.data)) return '';
+  const d = esc(a.data), n = esc(a.name), t = a.type || '';
+  if (t.startsWith('audio')) return `<audio controls src="${d}"></audio>`;
+  if (t.startsWith('image')) return `<img class="ai" src="${d}" alt="${n}">`;
+  return `<a class="fa" href="${d}" download="${n}">Fayl: ${n}</a>`;
+};
+function thread(sid, me) {
+  const ms = db.msgs.filter(m => m.sid === sid).sort((a, b) => a.ts - b.ts);
+  return `<div class="thr" id="thr">${ms.length ? ms.map(m => `<div class="bb ${m.by === me ? 'me' : 'ot'}">${m.text ? `<div>${esc(m.text)}</div>` : ''}${attHtml(m.att)}<div class="tm">${fdt(m.ts)}</div></div>`).join('') : `<p class="mut">Hali xabar yo'q. Birinchi bo'lib yozing.</p>`}</div>`;
+}
+function composer() {
+  return `<div class="cmp">${S.att ? `<div class="msg">Biriktirildi: ${esc(S.att.name)} <button class="btn ghost" onclick="S.att=null;render()">Olib tashlash</button></div>` : ''}
+  <label for="cm">Xabar matni</label><textarea id="cm" rows="2" oninput="S.draft=this.value">${esc(S.draft || '')}</textarea>
+  <div class="row"><div><label class="btn ghost fl">${ic('file')} Fayl biriktirish<input type="file" hidden onchange="pickFile(this.files[0])"></label><button class="btn ${S.rec ? 'red' : 'ghost'}" onclick="recToggle()">${ic('mic')} ${S.rec ? "To'xtatish" : 'Audio yozish'}</button></div><button class="btn gold" onclick="sendMsg()">${ic('send')} Yuborish</button></div>${note()}</div>`;
+}
+function readAtt(b, name, type) {
+  if (b.size > 1500000) { S.note = "Fayl hajmi 1,5 MB dan oshmasin."; render(); return; }
+  const r = new FileReader();
+  r.onload = () => { S.att = { name, type: type || b.type || '', data: r.result }; S.note = ''; render(); };
+  r.readAsDataURL(b);
+}
+const pickFile = f => { if (f) readAtt(f, f.name, f.type); };
+async function recToggle() {
+  if (MR && MR.state === 'recording') { MR.stop(); return; }
+  if (!navigator.mediaDevices || !window.MediaRecorder) { S.note = "Bu qurilmada audio yozib bo'lmaydi. «Fayl biriktirish» orqali audio yuboring."; render(); return; }
+  try {
+    const st = await navigator.mediaDevices.getUserMedia({ audio: true });
+    CH = []; MR = new MediaRecorder(st);
+    MR.ondataavailable = e => CH.push(e.data);
+    MR.onstop = () => { st.getTracks().forEach(t => t.stop()); const ty = MR.mimeType || 'audio/webm'; S.rec = false; readAtt(new Blob(CH, { type: ty }), 'audio-' + fdt(Date.now()).replace(/[: ]/g, '-') + (ty.includes('mp4') ? '.m4a' : '.webm'), ty); };
+    MR.start(); S.rec = true; render();
+  } catch (e) { S.note = "Mikrofonga ruxsat berilmadi."; render(); }
+}
+function sendMsg() {
+  const t = ($('cm').value || '').trim(), by = S.user.role === 'teacher' ? 'teacher' : 'student', sid = by === 'teacher' ? S.cs : S.user.id;
+  if (MR && MR.state === 'recording') { S.note = "Avval audio yozuvni to'xtating."; render(); return; }
+  if (!sid || (!t && !S.att)) { S.note = "Matn yozing yoki fayl biriktiring."; render(); return; }
+  db.msgs.push({ id: uid(), sid, by, text: t, att: S.att || null, ts: Date.now(), read: false });
+  if (!save()) { db.msgs.pop(); S.note = "Xotira to'ldi. Kichikroq fayl yuboring."; render(); return; }
+  S.att = null; S.draft = ''; S.note = ''; render();
+}
+function sChat() {
+  const sid = S.user.id; let ch = false;
+  db.msgs.forEach(m => { if (m.sid === sid && m.by === 'teacher' && !m.read) { m.read = true; ch = true; } });
+  if (ch) save();
+  return `<div class="card"><h2>Ustoz bilan chat</h2>${thread(sid, 'student')}${composer()}</div>`;
+}
+function tChat() {
+  if (!db.students.length) return `<div class="card"><h2>Chat</h2><p class="mut">Avval «O'quvchilar» bo'limida o'quvchi qo'shing.</p></div>`;
+  const sel = db.students.find(x => x.id === S.cs);
+  if (sel) { let ch = false; db.msgs.forEach(m => { if (m.sid === sel.id && m.by === 'student' && !m.read) { m.read = true; ch = true; } }); if (ch) save(); }
+  const list = db.students.map(s => { const lm = db.msgs.filter(m => m.sid === s.id); return { s, last: lm[lm.length - 1], un: lm.filter(m => m.by === 'student' && !m.read).length }; }).sort((a, b) => (b.last ? b.last.ts : 0) - (a.last ? a.last.ts : 0));
+  const L = list.map(x => `<button class="stb ${sel && sel.id === x.s.id ? 'on' : ''}" onclick="S.cs='${x.s.id}';S.note='';S.att=null;S.draft='';render()"><b>${esc(sname(x.s))}</b>${x.un ? ` <span class="bdg">${x.un}</span>` : ''}<div class="mut">${x.last ? esc((x.last.text || 'Fayl yoki audio').slice(0, 40)) : esc(x.s.cls || "Xabar yo'q")}</div></button>`).join('');
+  return `<div class="chat"><div class="card"><h3>O'quvchilar</h3>${L}</div><div class="card">${sel ? `<h3>${esc(sname(sel))} <span class="mut">${esc(sel.cls || '')}</span></h3>${thread(sel.id, 'teacher')}${composer()}` : `<p class="mut">Suhbatni boshlash uchun o'quvchini tanlang.</p>`}</div></div>`;
+}
+window.addEventListener('storage', e => { if (e.key === KEY && S.user) { const l = load(); if (l) { db = l; const c = $('cm'); if (!c || !c.value) render(); } } });
+
+/* ===== Ikonkalar ===== */
+const IP = {
+ book: '<path d="M4 4h12a3 3 0 0 1 3 3v13H7a3 3 0 0 1-3-3z"/><path d="M4 17a3 3 0 0 1 3-3h12"/>',
+ upload: '<path d="M12 16V4M7 9l5-5 5 5M4 20h16"/>',
+ layers: '<path d="M12 3l9 5-9 5-9-5zM3 13l9 5 9-5"/>',
+ users: '<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c0-4 3-6 6.5-6s6.5 2 6.5 6M16 5a3.5 3.5 0 0 1 0 7M18 14c2.5.6 3.5 2.6 3.5 6"/>',
+ table: '<rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/>',
+ chart: '<path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/>',
+ trophy: '<path d="M8 4h8v5a4 4 0 0 1-8 0zM8 6H4v1a4 4 0 0 0 4 4M16 6h4v1a4 4 0 0 1-4 4M12 13v4M8 20h8M10 17h4"/>',
+ chat: '<path d="M4 5h16v11H9l-5 4z"/>',
+ folder: '<path d="M3 6h6l2 2h10v11H3z"/>',
+ user: '<circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.5 3.5-7 8-7s8 2.5 8 7"/>',
+ logout: '<path d="M9 4H5v16h4M16 8l4 4-4 4M20 12H9"/>',
+ file: '<path d="M6 3h8l5 5v13H6zM14 3v5h5"/>',
+ mic: '<rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/>',
+ send: '<path d="M3 11 21 3l-8 18-2-8z"/>',
+ trash: '<path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/>',
+ phones: '<path d="M4 15v-3a8 8 0 0 1 16 0v3"/><rect x="3" y="14" width="4" height="7" rx="1"/><rect x="17" y="14" width="4" height="7" rx="1"/>',
+ lock: '<rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/>',
+ check: '<path d="M5 12l5 5 9-10"/>',
+ edit: '<path d="M4 20h4L19 9l-4-4L4 16z"/>',
+ mail: '<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/>'
+};
+const ic = n => `<svg class="ic" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${IP[n] || ''}</svg>`;
+const TI = { add: 'upload', bank: 'layers', stud: 'users', res: 'table', an: 'chart', rate: 'trophy', mat: 'folder', chat: 'chat', prof: 'user', tests: 'book', mine: 'check', rec: 'file' };
+
+/* ===== Materiallar (qo'shimcha dars, mashg'ulot, audio) ===== */
+const KIND = { dars: "Qo'shimcha darslar", mash: "Mashg'ulotlar", audio: 'Audio (tinglash uchun)' };
+const KI = { dars: 'book', mash: 'edit', audio: 'phones' };
+function pickMat(f) {
+  if (!f) return;
+  if (f.size > 2000000) { S.note = "Fayl hajmi 2 MB dan oshmasin."; render(); return; }
+  const r = new FileReader();
+  r.onload = () => {
+    let ty = f.type; const m = /\.(mp3|m4a|wav|ogg|aac)$/i.exec(f.name);
+    if (!ty && m) ty = 'audio/' + m[1].toLowerCase();
+    S.matf = { name: f.name, type: ty || '', data: r.result }; S.note = ''; render();
+  };
+  r.readAsDataURL(f);
+}
+function saveMat() {
+  const title = ($('mt').value || '').trim() || (S.matf ? S.matf.name : '');
+  if (!S.matf) { S.note = 'Fayl tanlang.'; render(); return; }
+  db.mats.push({ id: uid(), kind: S.mk || 'dars', title, desc: ($('md').value || '').trim(), att: S.matf, ts: Date.now() });
+  if (!save()) { db.mats.pop(); S.note = "Xotira to'ldi. Kichikroq fayl yuklang yoki eski materialni o'chiring."; render(); return; }
+  S.matf = null; S.mk = 'dars'; S.note = "Yuklandi. O'quvchilar «Materiallar» bo'limida ko'radi."; render();
+}
+function delMat(id) {
+  if (!confirm("Material o'chirilsinmi?")) return;
+  db.mats = db.mats.filter(m => m.id !== id); save(); render();
+}
+function matList(edit) {
+  if (!db.mats.length) return `<p class="mut">Hali material yuklanmagan.</p>`;
+  return Object.entries(KIND).map(([k, v]) => {
+    const L = db.mats.filter(m => m.kind === k).sort((a, b) => b.ts - a.ts);
+    return L.length ? `<h3 class="mk">${ic(KI[k])} ${v}</h3>` + L.map(m => `<div class="mi"><div style="flex:1;min-width:0"><b>${esc(m.title)}</b>${m.desc ? `<div class="mut">${esc(m.desc)}</div>` : ''}<div class="mut">${fdt(m.ts)}</div>${attHtml(m.att)}</div>${edit ? `<button class="btn red" onclick="delMat('${m.id}')">${ic('trash')} O'chirish</button>` : ''}</div>`).join('') : '';
+  }).join('');
+}
+function tMat() {
+  const k = S.mk || 'dars';
+  return `<div class="card"><h2>${ic('upload')} Material yuklash</h2>
+  <p class="mut">Yuklangan fayllar barcha o'quvchilarga «Materiallar» bo'limida ko'rinadi.</p>
+  <label for="mk">Turi</label><select id="mk" onchange="S.mk=this.value">${Object.entries(KIND).map(([a, v]) => `<option value="${a}" ${a === k ? 'selected' : ''}>${v}</option>`).join('')}</select>
+  <label for="mt">Sarlavha</label><input id="mt" value="${esc(S.mt || '')}" oninput="S.mt=this.value">
+  <label for="md">Izoh (ixtiyoriy)</label><input id="md" value="${esc(S.md || '')}" oninput="S.md=this.value">
+  <label for="mf">Fayl (PDF, Word, audio, rasm; 2 MB gacha)</label><input id="mf" type="file" onchange="pickMat(this.files[0])">
+  ${S.matf ? `<div class="msg">${ic('file')} ${esc(S.matf.name)}</div>` : ''}
+  <button class="btn gold" onclick="saveMat()">${ic('upload')} Yuklash</button>${note()}</div>
+  <div class="card"><h2>${ic('folder')} Yuklangan materiallar (${db.mats.length})</h2>${matList(true)}</div>`;
+}
+const sMat = () => `<div class="card"><h2>${ic('folder')} Materiallar</h2>${matList(false)}</div>`;
+
+/* ===== Tavsiyalar, bloklash, aloqa, tiklash ===== */
+const CFG = { EMAILJS: { service: 'service_t927xhs', template: 'template_bxuur4n', key: 'Dzn-IIMA9JtOHKjP_' } }; // emailjs.com ma'lumotlarini shu yerga yozing
+function recsOf(rs) {
+  const B = agg2(rs), P = o => Math.round(o.c / o.n * 100), rec = [];
+  Object.values(B.mav).sort((a, b) => cmp(a.t, b.t)).filter(o => P(o) < 60).forEach(o => rec.push(`<b>${esc(o.name)}</b> mavzusini qayta o'qing (${P(o)}%).`));
+  Object.values(B.bb).map(o => Object.assign(o, { p: P(o) })).filter(o => o.p < 60).sort((a, b) => a.p - b.p).slice(0, 8).forEach(o => {
+    const pg = o.wb.size ? o.wb : o.ab;
+    rec.push(`${o.t.mavzu}-mavzu, <b>${esc(o.bb)}</b> bilim birligi: ${pg.size ? "darslikning <b>" + esc(pagesTxt(pg)) + "-betini</b> qayta o'qing" : "tegishli bo'limni qayta o'qing"} (${o.p}%).`);
+  });
+  BLUMN.forEach((nm, i) => { const o = B.blum[i]; if (o && P(o) < 60) rec.push(`<b>${nm}</b> darajasida zaif (${P(o)}%): ${ADV[nm]}`); });
+  return rec;
+}
+function recCard() {
+  const rs = lastRes(S.user.id), rec = rs.length ? recsOf(rs) : [];
+  return `<div class="card"><h2>${ic('file')} Tavsiyalar</h2>${!rs.length ? `<p class="mut">Test topshirgach, tavsiyalar shu yerda paydo bo'ladi.</p>` : rec.length ? `<p class="mut">Test natijalaringiz asosida:</p><ol class="rec">${rec.map(x => `<li>${x}</li>`).join('')}</ol>` : `<p class="ok">Barcha ko'rsatkichlar yaxshi. Keyingi mavzuga o'tishingiz mumkin.</p>`}</div>`;
+}
+/* 2 marta ketma-ket 100% bo'lmasa: 24 soatga blok */
+function blockUntil(sid, tid) {
+  const rs = db.results.filter(r => r.sid === sid && r.tid === tid).sort((a, b) => a.date - b.date);
+  let st = 0, until = 0;
+  rs.forEach(r => { if (pct(r) === 100) st = 0; else if (++st >= 2) { until = r.date + 864e5; st = 0; } });
+  return until > Date.now() ? until : 0;
+}
+const leftTxt = ms => { const m = Math.max(1, Math.ceil((ms - Date.now()) / 6e4)), h = Math.floor(m / 60); return h ? `${h} soat ${m % 60} daqiqa` : `${m} daqiqa`; };
+const blockMsg = tid => { const bu = blockUntil(S.user.id, tid); return bu ? `<span class="bad">${ic('lock')} Bloklangan: ${leftTxt(bu)} dan so'ng qayta urinish mumkin.</span>` : ''; };
+/* Biz bilan aloqa */
+function tgUrl(v) { v = (v || '').trim().replace(/^https?:\/\//i, '').replace(/^t\.me\//i, '').replace(/^@/, ''); return /^[A-Za-z][A-Za-z0-9_]{4,31}$/.test(v) ? 'https://t.me/' + v : ''; }
+function openContact() {
+  const u = tgUrl(db.cfg.tg);
+  if (!u) { alert("O'qituvchi hali Telegram manzilini ulamagan."); return; }
+  if (tg && tg.openTelegramLink) tg.openTelegramLink(u); else window.open(u, '_blank', 'noopener');
+}
+const tContact = () => `<div class="card"><h2>${ic('mail')} Aloqa va tiklash</h2>
+  <p class="mut">Telegram manzili bosh sahifadagi «Biz bilan aloqa» tugmasiga ulanadi. Gmail ID yoki parolni tiklash kodini olish uchun kerak.</p>
+  <label for="ct">Shaxsiy Telegram (@username yoki t.me/username)</label><input id="ct" value="${esc(db.cfg.tg || '')}">
+  <label for="ce">Gmail manzili</label><input id="ce" type="email" value="${esc(db.cfg.email || '')}">
+  <button class="btn gold" onclick="saveContact()">${ic('check')} Saqlash</button>${S.cnote ? `<div class="msg">${esc(S.cnote)}</div>` : ''}</div>`;
+function saveContact() {
+  const t = ($('ct').value || '').trim(), e = ($('ce').value || '').trim();
+  if (t && !tgUrl(t)) S.cnote = "Telegram manzili noto'g'ri. Masalan: @username";
+  else if (e && !/^[A-Za-z0-9._%+-]+@gmail\.com$/i.test(e)) S.cnote = "Faqat Gmail manzili (…@gmail.com) kiriting.";
+  else { db.cfg.tg = t ? tgUrl(t) : ''; db.cfg.email = e.toLowerCase(); save(); S.cnote = 'Saqlandi.'; }
+  render();
+}
+/* ID / parolni tiklash: avval pochtaga tasdiqlash kodi, tasdiqlansagina o'zgaradi */
+let FG = null, FGT = 0;
+const maskMail = e => e.replace(/^(.).*(@.*)$/, '$1***$2');
+async function sendMail(to, subject, message) {
+  const c = CFG.EMAILJS;
+  if (!c.service || !c.template || !c.key) throw new Error('cfg');
+  let r;
+  try { r = await fetch('https://api.emailjs.com/api/v1.0/email/send', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ service_id: c.service, template_id: c.template, user_id: c.key, template_params: { to_email: to, subject, message } }) }); }
+  catch (e) { const er = new Error('send'); er.detail = "Tarmoq xatosi: EmailJS'ga ulanib bo'lmadi (internet yoki reklama to'suvchi)."; throw er; }
+  if (!r.ok) { let t = ''; try { t = await r.text(); } catch (e) {} const er = new Error('send'); er.detail = 'EmailJS javobi (' + r.status + '): ' + t.slice(0, 200); throw er; }
+}
+function fgToggle() { S.fgo = !S.fgo; FG = null; S.fgm = ''; render(); }
+async function fgStart(kind) {
+  const e = db.cfg.email;
+  if (!e) { S.fgm = "Gmail manzili ulanmagan. O'qituvchi profilidagi «Aloqa va tiklash» bo'limida Gmail ulanishi kerak."; render(); return; }
+  if (Date.now() - FGT < 60000) { S.fgm = "1 daqiqadan so'ng qayta urinib ko'ring."; render(); return; }
+  const code = rnd(6, '0123456789');
+  S.fgm = 'Yuborilmoqda…'; render();
+  try {
+    await sendMail(e, 'Huquqshunoslik platformasi: tasdiqlash', `Siz ${kind === 'id' ? 'ID ni eslatish' : 'parolni tiklash'} so'rovini yubordingizmi?\n\nHA bo'lsa, platformada shu kodni kiriting: ${code}\nKod 10 daqiqa amal qiladi.\n\nAgar siz so'ramagan bo'lsangiz, bu xabarga e'tibor bermang. ID va parol o'zgarmaydi.`);
+    FGT = Date.now(); FG = { kind, code, exp: Date.now() + 6e5, tries: 0 };
+    S.fgm = `Tasdiqlash kodi ${maskMail(e)} manziliga yuborildi.`;
+  } catch (x) { S.fgm = x.message === 'cfg' ? "Pochta xizmati hali sozlanmagan (EmailJS)." : "Xabar yuborilmadi. " + (x.detail || ''); }
+  render();
+}
+async function fgConfirm() {
+  const c = ($('fgc').value || '').trim();
+  if (!FG || Date.now() > FG.exp) { FG = null; S.fgm = "Kod muddati tugadi. Qaytadan so'rang."; render(); return; }
+  if (++FG.tries > 5) { FG = null; S.fgm = "Juda ko'p xato urinish. Hech narsa o'zgarmadi."; render(); return; }
+  if (c !== FG.code) { S.fgm = "Kod noto'g'ri."; render(); return; }
+  const kind = FG.kind, np = rnd(10, 'abcdefghjkmnpqrstuvwxyz23456789');
+  S.fgm = 'Yuborilmoqda…'; render();
+  try {
+    const cred = kind === 'pass' ? await makeCred(db.teacher.id, np) : null;
+    if (kind === 'pass') await sendMail(db.cfg.email, 'Yangi parol', `Platformaga kirish ma'lumotlari:\nID: ${db.teacher.id}\nYangi parol: ${np}\n\nKirgach, parolni Profil bo'limida o'zgartiring.`);
+    else await sendMail(db.cfg.email, 'Sizning ID', `Platformadagi ID: ${db.teacher.id}\n\nParol o'zgarmadi.`);
+    if (cred) { db.teacher = cred; save(); }
+    FG = null; S.fgm = "Tayyor. Ma'lumotlar pochtangizga yuborildi.";
+  } catch (x) { S.fgm = "Xabar yuborilmadi, ID va parol o'zgarmadi. " + (x.detail || ''); }
+  render();
+}
+function fgCancel() { FG = null; S.fgm = "Bekor qilindi. ID va parol o'zgarmadi."; render(); }
+const fgPanel = () => !S.fgo ? '' : `<div class="card lg2"><h3>${ic('mail')} O'qituvchi: ID yoki parolni tiklash</h3>
+  <p class="mut">Tasdiqlash kodi profilda ulangan Gmail manziliga yuboriladi. Tasdiqlamasangiz, ID va parol o'zgarmaydi.</p>
+  ${FG ? `<label for="fgc">Pochtaga kelgan 6 xonali kod</label><input id="fgc" inputmode="numeric" maxlength="6" autocomplete="one-time-code"><div class="hbtn"><button class="btn gold" onclick="fgConfirm()">${ic('check')} Ha, tasdiqlayman</button><button class="btn ghost" onclick="fgCancel()">Yo'q, bekor qilish</button></div>` : `<div class="hbtn"><button class="btn ghost" onclick="fgStart('id')">ID ni unutdim</button><button class="btn ghost" onclick="fgStart('pass')">Parolni unutdim</button></div>`}
+  ${S.fgm ? `<div class="msg">${esc(S.fgm)}</div>` : ''}</div>`;
+
+/* Bosh sahifa */
+
+render();
+</script>
+</body>
+</html>
