@@ -161,22 +161,50 @@ const tg = window.Telegram && window.Telegram.WebApp;
 if (tg) { tg.ready(); tg.expand(); }
 
 /* ===== Ma'lumotlar qatlami =====
-   Hozir brauzer xotirasida (localStorage) saqlanadi.
-   Umumiy bazaga o'tish uchun faqat load() va save() ni almashtirish kifoya. */
+   Umumiy ma'lumotlar (o'qituvchi, o'quvchilar, testlar, natijalar) Supabase'da, server (/api/db) orqali saqlanadi.
+   Xabarlar, materiallar va aloqa sozlamalari hozircha shu qurilmada (localStorage) qoladi. */
 const KEY = 'huquq_platform_v1';
-const load = () => { try { return JSON.parse(localStorage.getItem(KEY)) || null } catch(e) { return null } };
-const save = () => { try { localStorage.setItem(KEY, JSON.stringify(db)); return true } catch(e) { return false } };
-let db = load() || { teacher: null, students: [], tests: [], results: [] };
-/* Standart parol yo'q. Eski (ochiq matnli) parol topilsa, o'chiriladi va o'qituvchi yangisini o'zi yaratadi. */
-if (!db.teacher || db.teacher.pass !== undefined || !db.teacher.hash) db.teacher = null;
-db.msgs = db.msgs || [];
-db.mats = db.mats || [];
-db.cfg = db.cfg || { tg: '', email: '' };
-db.tests.forEach((t, i) => {
-  if (t.sinf == null) { t.sinf = 8; t.mavzu = i + 1; }
-  t.qs.forEach((q, k) => { if (!q.tur) { q.tur = 'multiple'; q.id = q.id || t.id + '-' + k; q.izoh = q.e || ''; q.ball = 1; q.bb = ''; q.blum = ''; } });
-});
-save();
+const loadLocal = () => { try { return JSON.parse(localStorage.getItem(KEY)) || {} } catch(e) { return {} } };
+const L0 = loadLocal();
+let db = { teacher: null, students: [], tests: [], results: [], msgs: L0.msgs || [], mats: L0.mats || [], cfg: L0.cfg || { tg: '', email: '' } };
+let TOKEN = null;
+async function api(action, body) {
+  const r = await fetch('/api/db', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action, token: TOKEN, ...body }) });
+  let j = {}; try { j = await r.json(); } catch (e) {}
+  if (!r.ok) { const e = new Error(j.error || 'Server xatosi'); e.status = r.status; throw e; }
+  return j;
+}
+function applyData(d) {
+  db.teacher = d.teacher || (d.hasTeacher ? { id: '', pub: true } : null);
+  db.students = d.students || []; db.tests = d.tests || []; db.results = d.results || [];
+  db.tests.forEach((t, i) => {
+    if (t.sinf == null) { t.sinf = 8; t.mavzu = i + 1; }
+    t.qs.forEach((q, k) => { if (!q.tur) { q.tur = 'multiple'; q.id = q.id || t.id + '-' + k; q.izoh = q.e || ''; q.ball = 1; q.bb = ''; q.blum = ''; } });
+  });
+}
+const save = () => {
+  try { localStorage.setItem(KEY, JSON.stringify({ msgs: db.msgs, mats: db.mats, cfg: db.cfg })); } catch (e) { return false; }
+  pushShared(); return true;
+};
+let pushT = null;
+function pushShared() {
+  if (!(S.user && S.user.role === 'teacher') || !TOKEN) return;
+  clearTimeout(pushT);
+  pushT = setTimeout(async () => {
+    try {
+      const r = await api('save', { data: { teacher: db.teacher, students: db.students, tests: db.tests, results: db.results } });
+      if (r.results) db.results = r.results;
+    } catch (e) {
+      alert(e.status === 401 ? "Seans muddati tugadi. Sahifani yangilab, qayta kiring. Oxirgi o'zgarishlar saqlanmadi." : "Serverga saqlab bo'lmadi: " + e.message);
+    }
+  }, 300);
+}
+async function boot() {
+  $('app').innerHTML = '<div class="wrap"><p class="mut">Yuklanmoqda…</p></div>';
+  try { applyData(await api('pub')); }
+  catch (e) { $('app').innerHTML = `<div class="wrap"><div class="card"><h2>Server bilan aloqa yo'q</h2><p class="mut">${esc(e.message)}. Sahifani yangilab ko'ring.</p></div></div>`; return; }
+  render();
+}
 
 /* ===== Parol xavfsizligi: parol ochiq saqlanmaydi (PBKDF2 + tasodifiy tuz) ===== */
 const hex = b => Array.from(new Uint8Array(b)).map(x => x.toString(16).padStart(2, '0')).join('');
@@ -251,8 +279,10 @@ async function setupTeacher() {
   if (p1.length < 8) return err("Parol kamida 8 belgidan iborat bo'lsin.");
   if (p1 === id || /^(12345678|123456789|1234567890|password|qwertyui|11111111)$/i.test(p1)) return err("Parol juda oddiy. Boshqasini tanlang.");
   if (p1 !== p2) return err("Parollar mos kelmadi.");
-  try { db.teacher = await makeCred(id, p1); } catch (e) { return err("Bu qurilmada xavfsiz saqlash ishlamadi. Ilovani Telegram yoki https manzil orqali oching."); }
-  save(); S.user = { role: 'teacher', id }; S.tab = 'add'; S.note = ''; render();
+  let d;
+  try { const cred = await makeCred(id, p1); d = await api('setup', { id, cred }); }
+  catch (e) { return err(e.status ? e.message : "Bu qurilmada xavfsiz saqlash ishlamadi. Ilovani Telegram yoki https manzil orqali oching."); }
+  TOKEN = d.token; applyData(d.data); S.user = { role: 'teacher', id }; S.tab = 'add'; S.note = ''; render();
 }
 function home() {
   if (!db.teacher) return setupView();
@@ -282,17 +312,15 @@ async function login() {
   const role = ROLE, id = $('lid').value.trim(), pw = $('lpw').value, m = $('lmsg');
   const wait = lockLeft();
   if (wait) { m.hidden = false; m.textContent = `Juda ko'p xato urinish. ${Math.ceil(wait / 1000)} soniyadan so'ng qayta urinib ko'ring.`; return; }
-  let ok = false;
-  try {
-    if (role === 'teacher') ok = await checkTeacher(id, pw);
-    else ok = !!db.students.find(x => x.id === id && x.pass === pw);
-  } catch (e) { m.hidden = false; m.textContent = "Bu qurilmada xavfsiz kirish ishlamadi. Ilovani Telegram yoki https manzil orqali oching."; return; }
-  if (!ok) { lockFail(); m.hidden = false; m.textContent = "ID yoki parol noto'g'ri. Qayta tekshiring."; return; }
-  lockClear();
+  m.hidden = false; m.textContent = 'Tekshirilmoqda…';
+  let d;
+  try { d = await api('login', { role, id, pw }); }
+  catch (e) { if (e.status === 401) lockFail(); m.hidden = false; m.textContent = e.message; return; }
+  lockClear(); TOKEN = d.token; applyData(d.data);
   S.user = { role, id }; S.tab = role === 'teacher' ? 'add' : 'tests'; S.take = null; S.note = '';
   render();
 }
-function logout() { S.user = null; S.pending = null; render(); }
+function logout() { S.user = null; S.pending = null; TOKEN = null; render(); }
 
 /* ===== Excel yordamchilari ===== */
 function download(rows, name, sheet) {
@@ -752,7 +780,7 @@ function finish() {
   const det = L.map((q, i) => { const b = q.ball || 1; tot += b; if (G[i].ok) sc += b; return { q: q.id, sel: G[i].sel, ok: G[i].ok, t: S.tt[i] || 0 }; });
   const att = db.results.filter(r => r.sid === S.user.id && r.tid === t.id).length + 1;
   const r = { tid: t.id, sid: S.user.id, score: Math.round(sc * 100) / 100, total: Math.round(tot * 100) / 100, det, att, date: Date.now() };
-  db.results.push(r); save();
+  db.results.push(r); save(); api('addResult', { r }).catch(() => alert("Natija serverga yuborilmadi. Internetni tekshiring."));
   S.take = null; S.out = { tid: t.id, r }; render(); window.scrollTo(0, 0);
 }
 /* Faqat 100% bo'lganda ball, to'g'ri javoblar va izohlar ko'rsatiladi */
@@ -1063,7 +1091,7 @@ const fgPanel = () => !S.fgo ? '' : `<div class="card lg2"><h3>${ic('mail')} O'q
 
 /* Bosh sahifa */
 
-render();
+boot();
 </script>
 </body>
 </html>
