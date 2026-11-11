@@ -26,6 +26,32 @@ async function putRow(id, data) {
   if (!r.ok) throw new Error("Bazaga yozib bo'lmadi (" + r.status + ")");
 }
 
+
+// Xabarlar, materiallar va fayllar: har biri alohida qator (ID oralig'i bo'yicha).
+const MSG0 = 100000000, MSG1 = 800000000, MAT0 = 800000000, MAT1 = 900000000, ATT0 = 900000000, ATT1 = 2000000000;
+const rnd = (a, b) => a + Math.floor(Math.random() * (b - a));
+async function insertRow(a, b, data) {
+  for (let i = 0; i < 4; i++) {
+    const id = rnd(a, b);
+    const r = await fetch(`${BASE}/app_data`, { method: "POST", headers: { ...H, Prefer: "return=minimal" }, body: JSON.stringify({ id, data }) });
+    if (r.ok) return id;
+    if (r.status !== 409) throw new Error("Bazaga yozib bo'lmadi (" + r.status + ")");
+  }
+  throw new Error("Bazaga yozib bo'lmadi");
+}
+async function listRows(a, b, extra) {
+  const r = await fetch(`${BASE}/app_data?id=gte.${a}&id=lt.${b}${extra || ""}&select=id,data&order=data->>ts.desc&limit=1000`, { headers: H });
+  if (!r.ok) throw new Error("Bazadan o'qib bo'lmadi (" + r.status + ")");
+  return r.json();
+}
+const liveRows = (rows) => rows.filter((r) => r.data && !r.data.deleted).map((r) => ({ id: r.id, ...r.data }));
+async function makeAtt(a, owner) {
+  if (!a || typeof a.data !== "string" || !a.data.startsWith("data:") || a.data.length > 2900000) return null;
+  const meta = { name: String(a.name || "fayl").slice(0, 120), type: String(a.type || "").slice(0, 80) };
+  const id = await insertRow(ATT0, ATT1, { owner, ...meta, data: a.data });
+  return { id, ...meta, size: Math.round(a.data.length * 0.75) };
+}
+
 const sign = (p) => {
   const body = Buffer.from(JSON.stringify(p)).toString("base64url");
   return body + "." + crypto.createHmac("sha256", KEY).update(body).digest("base64url");
@@ -75,6 +101,65 @@ module.exports = async (req, res) => {
   const b = req.body || {};
   const exp = () => Date.now() + 12 * 3600 * 1000;
   try {
+    if (["sync", "sendMsg", "markRead", "addMat", "delMat", "getAtt"].includes(b.action)) {
+      const p = verify(b.token);
+      if (!p) return res.status(401).json({ error: "Seans tugagan. Qayta kiring." });
+      const T = p.role === "teacher";
+      if (b.action === "sync") {
+        const own = T ? "" : `&data->>sid=eq.${encodeURIComponent(p.id)}`;
+        const [m, t] = await Promise.all([listRows(MSG0, MSG1, own), listRows(MAT0, MAT1)]);
+        return res.json({ msgs: liveRows(m), mats: liveRows(t) });
+      }
+      if (b.action === "sendMsg") {
+        const text = String(b.text || "").slice(0, 4000);
+        const sid = T ? String(b.sid || "") : p.id;
+        if (!sid || (!text && !b.att)) return res.status(400).json({ error: "Matn yozing yoki fayl biriktiring." });
+        const att = b.att ? await makeAtt(b.att, sid) : null;
+        if (b.att && !att) return res.status(400).json({ error: "Fayl juda katta yoki noto'g'ri." });
+        const msg = { sid, by: T ? "teacher" : "student", text, ts: Date.now(), read: false, att };
+        const id = await insertRow(MSG0, MSG1, msg);
+        return res.json({ msg: { id, ...msg } });
+      }
+      if (b.action === "markRead") {
+        const sid = T ? String(b.sid || "") : p.id;
+        const by = T ? "student" : "teacher";
+        const rows = await listRows(MSG0, MSG1, `&data->>sid=eq.${encodeURIComponent(sid)}&data->>by=eq.${by}&data->>read=eq.false`);
+        await Promise.all(rows.map((r) => putRow(r.id, { ...r.data, read: true })));
+        return res.json({ ok: true });
+      }
+      if (b.action === "addMat") {
+        if (!T) return res.status(403).json({ error: "Faqat o'qituvchi." });
+        const att = await makeAtt(b.att, "mat");
+        if (!att) return res.status(400).json({ error: "Fayl juda katta yoki noto'g'ri." });
+        const mat = {
+          kind: ["dars", "mash", "audio"].includes(b.kind) ? b.kind : "dars",
+          title: String(b.title || "").slice(0, 200),
+          desc: String(b.desc || "").slice(0, 500),
+          ts: Date.now(),
+          att,
+        };
+        const id = await insertRow(MAT0, MAT1, mat);
+        return res.json({ mat: { id, ...mat } });
+      }
+      if (b.action === "delMat") {
+        if (!T) return res.status(403).json({ error: "Faqat o'qituvchi." });
+        const id = Number(b.id);
+        if (!(id >= MAT0 && id < MAT1)) return res.status(400).json({ error: "Noto'g'ri ID." });
+        const row = await getRow(id, null);
+        if (row && row.att) await putRow(row.att.id, { deleted: true });
+        await putRow(id, { deleted: true });
+        return res.json({ ok: true });
+      }
+      if (b.action === "getAtt") {
+        const id = Number(b.id);
+        if (!(id >= ATT0 && id < ATT1)) return res.status(400).json({ error: "Noto'g'ri ID." });
+        const a = await getRow(id, null);
+        if (!a || a.deleted) return res.status(404).json({ error: "Fayl topilmadi." });
+        if (a.owner !== "mat" && !T && a.owner !== p.id) return res.status(403).json({ error: "Ruxsat yo'q." });
+        return res.json({ name: a.name, type: a.type, data: a.data });
+      }
+    }
+
     const d0 = await getRow(1, {});
     const d = {
       teacher: d0.teacher || null,
