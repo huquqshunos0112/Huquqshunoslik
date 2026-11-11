@@ -704,7 +704,7 @@ function sTests() {
   if (!o.length) return `<div class="card"><h2>Mavzularim</h2><p class="mut">O'qituvchi hali mavzu qo'shmagan.</p></div>`;
   const u = unlockedIdx(S.user.id);
   return `<div class="card"><h2>Mavzularim</h2>
-  <p class="mut">Bajarilgan: ${u}/${o.length} mavzu. Keyingi mavzu ochilishi uchun joriy mavzuda 100% natija kerak. Ketma-ket 2 urinishda 100% bo'lmasa, mavzu 24 soatga bloklanadi.</p>
+  <p class="mut">Bajarilgan: ${u}/${o.length} mavzu. Keyingi mavzu ochilishi uchun joriy mavzuda 100% natija kerak. Ketma-ket 2 urinishda 100% bo'lmasa, mavzu 6 soatga bloklanadi.</p>
   <div class="bar"><i style="width:${Math.round(u / o.length * 100)}%"></i></div>
   ${o.map((t, i) => {
     const tried = myRes().some(r => r.tid === t.id);
@@ -793,8 +793,10 @@ const ansText = q => {
   return (q.acc || []).join(' / ');
 };
 function reviewHtml(t, r) {
-  return `<p><b>Ball: ${r.score}/${r.total}</b></p>` + live(t).map((q, i) => `<div class="q"><b>${i + 1}. ${esc(q.q)}</b>
-  <div class="ok">To'g'ri javob: ${esc(ansText(q))}</div>${q.izoh ? `<div class="mut">Izoh: ${esc(q.izoh)}</div>` : ''}</div>`).join('');
+  const opts = q => (q.tur === 'multiple' || q.tur === 'situational') && Array.isArray(q.o)
+    ? `<ol type="A" style="margin:6px 0 6px 22px">${q.o.map((o, k) => `<li class="${k === q.a ? 'ok' : ''}">${esc(o)}${k === q.a ? ' ✓' : ''}</li>`).join('')}</ol>` : '';
+  return `<p><b>Ball: ${r.score}/${r.total}</b></p>` + live(t).map((q, i) => `<div class="q" style="margin:14px 0"><b>${i + 1}. ${esc(q.q)}</b>${opts(q)}
+  <div class="ok">To'g'ri javob: ${esc(ansText(q))}</div>${q.izoh ? `<div class="mut">Izoh: ${esc(q.izoh)}</div>` : ''}${NA(q.bet) ? `<div class="mut">Darslik: ${esc(NA(q.bet))}-bet</div>` : ''}</div>`).join('');
 }
 function outView() {
   const t = db.tests.find(x => x.id === S.out.tid), r = S.out.r, p = pct(r);
@@ -1001,24 +1003,32 @@ const sMat = () => `<div class="card"><h2>${ic('folder')} Materiallar</h2>${matL
 /* ===== Tavsiyalar, bloklash, aloqa, tiklash ===== */
 const CFG = { EMAILJS: { service: 'service_t927xhs', template: 'template_bxuur4n', key: 'Dzn-IIMA9JtOHKjP_' } }; // emailjs.com ma'lumotlarini shu yerga yozing
 function recsOf(rs) {
-  const B = agg2(rs), P = o => Math.round(o.c / o.n * 100), rec = [];
-  Object.values(B.mav).sort((a, b) => cmp(a.t, b.t)).filter(o => P(o) < 60).forEach(o => rec.push(`<b>${esc(o.name)}</b> mavzusini qayta o'qing (${P(o)}%).`));
-  Object.values(B.bb).map(o => Object.assign(o, { p: P(o) })).filter(o => o.p < 60).sort((a, b) => a.p - b.p).slice(0, 8).forEach(o => {
-    const pg = o.wb.size ? o.wb : o.ab;
-    rec.push(`${o.t.mavzu}-mavzu, <b>${esc(o.bb)}</b> bilim birligi: ${pg.size ? "darslikning <b>" + esc(pagesTxt(pg)) + "-betini</b> qayta o'qing" : "tegishli bo'limni qayta o'qing"} (${o.p}%).`);
+  const items = [];
+  rs.forEach(r => {
+    const t = db.tests.find(x => x.id === r.tid);
+    if (!t || !r.det) return;
+    const wr = r.det.filter(d => !d.ok).map(d => t.qs.find(x => x.id === d.q)).filter(Boolean);
+    if (wr.length) items.push({ t, wr, tot: r.det.length });
   });
-  BLUMN.forEach((nm, i) => { const o = B.blum[i]; if (o && P(o) < 60) rec.push(`<b>${nm}</b> darajasida zaif (${P(o)}%): ${ADV[nm]}`); });
-  return rec;
+  items.sort((a, b) => b.wr.length / b.tot - a.wr.length / a.tot);
+  return items.slice(0, 5).map(({ t, wr, tot }) => {
+    const pg = new Set(wr.map(q => NA(q.bet)).filter(Boolean));
+    const head = `<b>${esc(label(t))}</b> (${tot} ta savoldan ${wr.length} tasida xato): ` + (pg.size
+      ? `darslikning <b>${esc(pagesTxt(pg))}-${pg.size > 1 ? 'betlarini' : 'betini'}</b> qayta o'qing.`
+      : "darslikdagi shu mavzuni qayta o'qing.");
+    const pts = wr.slice(0, 3).map(q => `<li>${NA(q.bet) ? `<b>${esc(NA(q.bet))}-bet:</b> ` : ''}«${esc(q.q.slice(0, 110))}${q.q.length > 110 ? '…' : ''}» savoliga e'tibor bering. ${q.izoh ? esc(q.izoh) : "To'g'ri javob: " + esc(ansText(q)) + '.'}</li>`).join('');
+    return `${head}<div class="mut" style="margin-top:4px">Xato qilingan joylar:</div><ul style="margin:4px 0 0 18px">${pts}</ul>`;
+  });
 }
 function recCard() {
   const rs = lastRes(S.user.id), rec = rs.length ? recsOf(rs) : [];
   return `<div class="card"><h2>${ic('file')} Tavsiyalar</h2>${!rs.length ? `<p class="mut">Test topshirgach, tavsiyalar shu yerda paydo bo'ladi.</p>` : rec.length ? `<p class="mut">Test natijalaringiz asosida:</p><ol class="rec">${rec.map(x => `<li>${x}</li>`).join('')}</ol>` : `<p class="ok">Barcha ko'rsatkichlar yaxshi. Keyingi mavzuga o'tishingiz mumkin.</p>`}</div>`;
 }
-/* 2 marta ketma-ket 100% bo'lmasa: 24 soatga blok */
+/* 2 marta ketma-ket 100% bo'lmasa: 6 soatga blok */
 function blockUntil(sid, tid) {
   const rs = db.results.filter(r => r.sid === sid && r.tid === tid).sort((a, b) => a.date - b.date);
   let st = 0, until = 0;
-  rs.forEach(r => { if (pct(r) === 100) st = 0; else if (++st >= 2) { until = r.date + 864e5; st = 0; } });
+  rs.forEach(r => { if (pct(r) === 100) st = 0; else if (++st >= 2) { until = r.date + 216e5; st = 0; } });
   return until > Date.now() ? until : 0;
 }
 const leftTxt = ms => { const m = Math.max(1, Math.ceil((ms - Date.now()) / 6e4)), h = Math.floor(m / 60); return h ? `${h} soat ${m % 60} daqiqa` : `${m} daqiqa`; };
