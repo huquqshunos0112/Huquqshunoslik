@@ -166,7 +166,7 @@ if (tg) { tg.ready(); tg.expand(); }
 const KEY = 'huquq_platform_v1';
 const loadLocal = () => { try { return JSON.parse(localStorage.getItem(KEY)) || {} } catch(e) { return {} } };
 const L0 = loadLocal();
-let db = { teacher: null, students: [], tests: [], results: [], msgs: L0.msgs || [], mats: L0.mats || [], cfg: L0.cfg || { tg: '', email: '' } };
+let db = { teacher: null, students: [], tests: [], results: [], msgs: [], mats: [], cfg: L0.cfg || { tg: '', email: '' } };
 let TOKEN = null;
 async function api(action, body) {
   const r = await fetch('/api/db', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action, token: TOKEN, ...body }) });
@@ -183,7 +183,7 @@ function applyData(d) {
   });
 }
 const save = () => {
-  try { localStorage.setItem(KEY, JSON.stringify({ msgs: db.msgs, mats: db.mats, cfg: db.cfg })); } catch (e) { return false; }
+  try { localStorage.setItem(KEY, JSON.stringify({ cfg: db.cfg })); } catch (e) { return false; }
   pushShared(); return true;
 };
 let pushT = null;
@@ -199,11 +199,37 @@ function pushShared() {
     }
   }, 300);
 }
+const ATTC = {}; let SYNC_SIG = '', TICK = 0;
+async function syncNow() {
+  if (!TOKEN) return false;
+  try {
+    const r = await api('sync');
+    const sig = r.msgs.map(m => m.id + ':' + (m.read ? 1 : 0)).join(',') + '|' + r.mats.map(m => m.id).join(',');
+    if (sig === SYNC_SIG) return false;
+    SYNC_SIG = sig; db.msgs = r.msgs; db.mats = r.mats; return true;
+  } catch (e) { return false; }
+}
+async function loadAtt(id) {
+  try { const r = await api('getAtt', { id }); ATTC[id] = r.data; render(); }
+  catch (e) { alert("Faylni yuklab bo'lmadi: " + e.message); }
+}
+function markRead(sid) {
+  const by = S.user.role === 'teacher' ? 'student' : 'teacher';
+  const ms = db.msgs.filter(m => m.sid === sid && m.by === by && !m.read);
+  if (!ms.length) return;
+  ms.forEach(m => { m.read = true; });
+  api('markRead', { sid }).catch(() => {});
+}
 async function boot() {
   $('app').innerHTML = '<div class="wrap"><p class="mut">Yuklanmoqda…</p></div>';
   try { applyData(await api('pub')); }
   catch (e) { $('app').innerHTML = `<div class="wrap"><div class="card"><h2>Server bilan aloqa yo'q</h2><p class="mut">${esc(e.message)}. Sahifani yangilab ko'ring.</p></div></div>`; return; }
   render();
+  setInterval(async () => {
+    if (!TOKEN || !S.user || document.hidden) return;
+    if (S.tab !== 'chat' && ++TICK % 4) return;
+    if (await syncNow()) { const x = document.activeElement; if (!(x && /^(TEXTAREA|INPUT|SELECT)$/.test(x.tagName) && x.value)) render(); }
+  }, 6000);
 }
 
 /* ===== Parol xavfsizligi: parol ochiq saqlanmaydi (PBKDF2 + tasodifiy tuz) ===== */
@@ -282,7 +308,7 @@ async function setupTeacher() {
   let d;
   try { const cred = await makeCred(id, p1); d = await api('setup', { id, cred }); }
   catch (e) { return err(e.status ? e.message : "Bu qurilmada xavfsiz saqlash ishlamadi. Ilovani Telegram yoki https manzil orqali oching."); }
-  TOKEN = d.token; applyData(d.data); S.user = { role: 'teacher', id }; S.tab = 'add'; S.note = ''; render();
+  TOKEN = d.token; applyData(d.data); SYNC_SIG = ''; await syncNow(); S.user = { role: 'teacher', id }; S.tab = 'add'; S.note = ''; render();
 }
 function home() {
   if (!db.teacher) return setupView();
@@ -316,11 +342,11 @@ async function login() {
   let d;
   try { d = await api('login', { role, id, pw }); }
   catch (e) { if (e.status === 401) lockFail(); m.hidden = false; m.textContent = e.message; return; }
-  lockClear(); TOKEN = d.token; applyData(d.data);
+  lockClear(); TOKEN = d.token; applyData(d.data); SYNC_SIG = ''; await syncNow();
   S.user = { role, id }; S.tab = role === 'teacher' ? 'add' : 'tests'; S.take = null; S.note = '';
   render();
 }
-function logout() { S.user = null; S.pending = null; TOKEN = null; render(); }
+function logout() { S.user = null; S.pending = null; TOKEN = null; db.msgs = []; db.mats = []; SYNC_SIG = ''; render(); }
 
 /* ===== Excel yordamchilari ===== */
 function download(rows, name, sheet) {
@@ -871,8 +897,11 @@ let MR = null, CH = [];
 const unreadN = () => !S.user ? 0 : S.user.role === 'teacher' ? db.msgs.filter(m => m.by === 'student' && !m.read).length : db.msgs.filter(m => m.sid === S.user.id && m.by === 'teacher' && !m.read).length;
 const unread = () => { const n = unreadN(); return n ? ` <b class="bdg">${n}</b>` : ''; };
 const attHtml = a => {
-  if (!a || !/^data:/.test(a.data)) return '';
-  const d = esc(a.data), n = esc(a.name), t = a.type || '';
+  if (!a) return '';
+  const dat = a.data && /^data:/.test(a.data) ? a.data : ATTC[a.id];
+  const n = esc(a.name), t = a.type || '';
+  if (!dat) return `<button class="btn ghost" onclick="loadAtt(${+a.id})">${ic('file')} ${n}${a.size ? ' (' + Math.max(1, Math.round(a.size / 1024)) + ' KB)' : ''}: ochish</button>`;
+  const d = esc(dat);
   if (t.startsWith('audio')) return `<audio controls src="${d}"></audio>`;
   if (t.startsWith('image')) return `<img class="ai" src="${d}" alt="${n}">`;
   return `<a class="fa" href="${d}" download="${n}">Fayl: ${n}</a>`;
@@ -904,29 +933,32 @@ async function recToggle() {
     MR.start(); S.rec = true; render();
   } catch (e) { S.note = "Mikrofonga ruxsat berilmadi."; render(); }
 }
-function sendMsg() {
+let SENDING = false;
+async function sendMsg() {
   const t = ($('cm').value || '').trim(), by = S.user.role === 'teacher' ? 'teacher' : 'student', sid = by === 'teacher' ? S.cs : S.user.id;
   if (MR && MR.state === 'recording') { S.note = "Avval audio yozuvni to'xtating."; render(); return; }
   if (!sid || (!t && !S.att)) { S.note = "Matn yozing yoki fayl biriktiring."; render(); return; }
-  db.msgs.push({ id: uid(), sid, by, text: t, att: S.att || null, ts: Date.now(), read: false });
-  if (!save()) { db.msgs.pop(); S.note = "Xotira to'ldi. Kichikroq fayl yuboring."; render(); return; }
-  S.att = null; S.draft = ''; S.note = ''; render();
+  if (SENDING) return;
+  SENDING = true; const att = S.att || null;
+  try {
+    const r = await api('sendMsg', { sid, text: t, att });
+    if (att && r.msg.att) ATTC[r.msg.att.id] = att.data;
+    db.msgs.push(r.msg);
+  } catch (e) { SENDING = false; S.draft = t; S.note = e.message; render(); return; }
+  SENDING = false; S.att = null; S.draft = ''; S.note = ''; render();
 }
 function sChat() {
-  const sid = S.user.id; let ch = false;
-  db.msgs.forEach(m => { if (m.sid === sid && m.by === 'teacher' && !m.read) { m.read = true; ch = true; } });
-  if (ch) save();
+  const sid = S.user.id; markRead(sid);
   return `<div class="card"><h2>Ustoz bilan chat</h2>${thread(sid, 'student')}${composer()}</div>`;
 }
 function tChat() {
   if (!db.students.length) return `<div class="card"><h2>Chat</h2><p class="mut">Avval «O'quvchilar» bo'limida o'quvchi qo'shing.</p></div>`;
   const sel = db.students.find(x => x.id === S.cs);
-  if (sel) { let ch = false; db.msgs.forEach(m => { if (m.sid === sel.id && m.by === 'student' && !m.read) { m.read = true; ch = true; } }); if (ch) save(); }
+  if (sel) markRead(sel.id);
   const list = db.students.map(s => { const lm = db.msgs.filter(m => m.sid === s.id); return { s, last: lm[lm.length - 1], un: lm.filter(m => m.by === 'student' && !m.read).length }; }).sort((a, b) => (b.last ? b.last.ts : 0) - (a.last ? a.last.ts : 0));
   const L = list.map(x => `<button class="stb ${sel && sel.id === x.s.id ? 'on' : ''}" onclick="S.cs='${x.s.id}';S.note='';S.att=null;S.draft='';render()"><b>${esc(sname(x.s))}</b>${x.un ? ` <span class="bdg">${x.un}</span>` : ''}<div class="mut">${x.last ? esc((x.last.text || 'Fayl yoki audio').slice(0, 40)) : esc(x.s.cls || "Xabar yo'q")}</div></button>`).join('');
   return `<div class="chat"><div class="card"><h3>O'quvchilar</h3>${L}</div><div class="card">${sel ? `<h3>${esc(sname(sel))} <span class="mut">${esc(sel.cls || '')}</span></h3>${thread(sel.id, 'teacher')}${composer()}` : `<p class="mut">Suhbatni boshlash uchun o'quvchini tanlang.</p>`}</div></div>`;
 }
-window.addEventListener('storage', e => { if (e.key === KEY && S.user) { const l = load(); if (l) { db = l; const c = $('cm'); if (!c || !c.value) render(); } } });
 
 /* ===== Ikonkalar ===== */
 const IP = {
@@ -968,16 +1000,19 @@ function pickMat(f) {
   };
   r.readAsDataURL(f);
 }
-function saveMat() {
+async function saveMat() {
   const title = ($('mt').value || '').trim() || (S.matf ? S.matf.name : '');
   if (!S.matf) { S.note = 'Fayl tanlang.'; render(); return; }
-  db.mats.push({ id: uid(), kind: S.mk || 'dars', title, desc: ($('md').value || '').trim(), att: S.matf, ts: Date.now() });
-  if (!save()) { db.mats.pop(); S.note = "Xotira to'ldi. Kichikroq fayl yuklang yoki eski materialni o'chiring."; render(); return; }
+  try {
+    const r = await api('addMat', { kind: S.mk || 'dars', title, desc: ($('md').value || '').trim(), att: S.matf });
+    ATTC[r.mat.att.id] = S.matf.data; db.mats.push(r.mat);
+  } catch (e) { S.note = e.message; render(); return; }
   S.matf = null; S.mk = 'dars'; S.note = "Yuklandi. O'quvchilar «Materiallar» bo'limida ko'radi."; render();
 }
-function delMat(id) {
+async function delMat(id) {
   if (!confirm("Material o'chirilsinmi?")) return;
-  db.mats = db.mats.filter(m => m.id !== id); save(); render();
+  try { await api('delMat', { id: +id }); db.mats = db.mats.filter(m => String(m.id) !== String(id)); render(); }
+  catch (e) { alert(e.message); }
 }
 function matList(edit) {
   if (!db.mats.length) return `<p class="mut">Hali material yuklanmagan.</p>`;
