@@ -748,7 +748,7 @@ function startTest(id) {
   const o = ordered();
   if (o.findIndex(t => t.id === id) > unlockedIdx(S.user.id)) return;
   const t = o.find(x => x.id === id);
-  S.shuf = {}; S.tt = {}; S.t0 = S.tl = Date.now();
+  S.shuf = {}; S.tt = {}; S.cur = 0; S.resp = {}; S.t0 = S.tl = Date.now();
   live(t).forEach(q => {
     let a = [];
     if (q.tur === 'multiple' || q.tur === 'situational') { a = [0, 1, 2, 3].filter(j => q.o[j]); if (q.shuf === 'ha') shuf(a); }
@@ -775,11 +775,20 @@ function tick(e) {
   if (m && S.tt[m[1]] == null) { const n = Date.now(); S.tt[m[1]] = Math.round((n - S.tl) / 1000); S.tl = n; }
 }
 function takeView() {
-  const t = db.tests.find(x => x.id === S.take);
+  const t = db.tests.find(x => x.id === S.take), L = live(t), i = Math.min(S.cur || 0, L.length - 1), last = i === L.length - 1;
+  const pct = Math.round(i / L.length * 100);
   return `<div class="wrap"><div class="card" onchange="tick(event)"><h2>${esc(label(t))}</h2>
-  ${live(t).map(qHtml).join('')}
-  <button class="btn gold" onclick="finish()">Yakunlash</button>
-  <button class="btn ghost" onclick="S.take=null;render()">Bekor qilish</button></div></div>`;
+  <div class="mut">Savol ${i + 1} / ${L.length}</div>
+  <div style="height:6px;background:#e5e7eb;border-radius:3px;margin:8px 0 12px"><div style="height:6px;width:${pct}%;background:#c9a227;border-radius:3px"></div></div>
+  ${qHtml(L[i], i)}
+  <button class="btn gold" onclick="${last ? 'finish()' : 'nextQ()'}">${last ? 'Yakunlash' : 'Keyingi savol'}</button>
+  <button class="btn ghost" onclick="if(confirm('Test bekor qilinsinmi? Natija saqlanmaydi.')){S.take=null;render()}">Bekor qilish</button></div></div>`;
+}
+function nextQ() {
+  const t = db.tests.find(x => x.id === S.take), L = live(t), i = S.cur || 0, q = L[i];
+  const r = readResp(q, i);
+  if (gradeQ(q, r).blank && !confirm("Bu savolga javob berilmadi. Keyingisiga o'tasizmi? Qaytib bo'lmaydi.")) return;
+  S.resp[i] = r; S.cur = i + 1; render(); window.scrollTo(0, 0);
 }
 const nz = x => NA(x).replace(/\s+/g, ' ').toLowerCase();
 function readResp(q, i) {
@@ -800,8 +809,10 @@ function gradeQ(q, r) {
 }
 function finish() {
   const t = db.tests.find(x => x.id === S.take), L = live(t);
-  const G = L.map((q, i) => gradeQ(q, readResp(q, i)));
-  if (G.some(g => g.blank) && !confirm("Ba'zi savollarga javob berilmadi. Baribir yakunlaysizmi?")) return;
+  const ci = S.cur || 0, rl = readResp(L[ci], ci);
+  if (gradeQ(L[ci], rl).blank && !confirm("Oxirgi savolga javob berilmadi. Baribir yakunlaysizmi?")) return;
+  S.resp[ci] = rl;
+  const G = L.map((q, i) => gradeQ(q, S.resp[i]));
   let sc = 0, tot = 0;
   const det = L.map((q, i) => { const b = q.ball || 1; tot += b; if (G[i].ok) sc += b; return { q: q.id, sel: G[i].sel, ok: G[i].ok, t: S.tt[i] || 0 }; });
   const att = db.results.filter(r => r.sid === S.user.id && r.tid === t.id).length + 1;
